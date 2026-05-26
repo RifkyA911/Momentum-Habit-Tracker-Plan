@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { authClient } from '~/utils/auth-client'
 
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: 'auth', middleware: 'auth' })
 
 const email = ref('')
 const loading = ref(false)
@@ -36,7 +36,7 @@ const handleReset = async () => {
       class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_40%)]"
     />
     <div
-      class="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-500/10 blur-3xl"
+      class="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary-500/10 blur-3xl"
     />
 
     <!-- Main Container -->
@@ -45,9 +45,9 @@ const handleReset = async () => {
         <!-- Logo -->
         <div class="mb-8 flex items-center justify-center gap-3">
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/15 ring-1 ring-blue-500/20 backdrop-blur"
+            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500/15 ring-1 ring-primary-500/20 backdrop-blur"
           >
-            <UIcon name="i-lucide-activity" class="h-5 w-5 text-blue-400" />
+            <UIcon name="i-lucide-activity" class="h-5 w-5 text-primary-400" />
           </div>
           <span class="text-lg font-semibold">Momentum</span>
         </div>
@@ -73,14 +73,14 @@ const handleReset = async () => {
           <!-- Success Message -->
           <div
             v-if="isSent"
-            class="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5 text-center"
+            class="rounded-2xl border border-primary-500/20 bg-primary-500/10 p-5 text-center"
           >
-            <UIcon name="i-lucide-check-circle-2" class="h-10 w-10 mx-auto mb-3 text-emerald-400" />
-            <p class="font-medium text-emerald-400">Reset link sent!</p>
+            <UIcon name="i-lucide-check-circle-2" class="h-10 w-10 mx-auto mb-3 text-primary-400" />
+            <p class="font-medium text-primary-400">Reset link sent!</p>
             <p class="mt-1 text-sm text-white/40">Check your email for the reset link.</p>
             <NuxtLink
               to="/login"
-              class="mt-4 inline-block text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
+              class="mt-4 inline-block text-sm font-medium text-primary-400 hover:text-primary-300 transition-colors"
             >
               Return to login →
             </NuxtLink>
@@ -130,7 +130,7 @@ const handleReset = async () => {
             Remember your password?
             <NuxtLink
               to="/login"
-              class="font-medium text-blue-400 hover:text-blue-300"
+              class="font-medium text-primary-400 hover:text-primary-300"
             >
               Log in
             </NuxtLink>

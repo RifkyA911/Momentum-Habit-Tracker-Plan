@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { authClient } from '~/utils/auth-client'
 
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: 'auth', middleware: 'auth' })
 
 const name = ref('')
 const email = ref('')
@@ -52,7 +52,7 @@ const handleGoogleSignup = async () => {
       class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_40%)]"
     />
     <div
-      class="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl"
+      class="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-primary-500/10 blur-3xl"
     />
 
     <!-- Main Container -->
@@ -62,9 +62,9 @@ const handleGoogleSignup = async () => {
         <!-- Logo -->
         <div class="flex items-center gap-3">
           <div
-            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 ring-1 ring-emerald-500/20 backdrop-blur"
+            class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500/15 ring-1 ring-primary-500/20 backdrop-blur"
           >
-            <UIcon name="i-lucide-activity" class="h-5 w-5 text-emerald-400" />
+            <UIcon name="i-lucide-activity" class="h-5 w-5 text-primary-400" />
           </div>
           <div>
             <p class="font-semibold tracking-tight">Momentum</p>
@@ -76,7 +76,7 @@ const handleGoogleSignup = async () => {
         <div class="max-w-xl">
           <h1 class="text-5xl font-semibold leading-[1.05] tracking-tight">
             Your journey to
-            <span class="text-emerald-400">consistency</span>
+            <span class="text-primary-400">consistency</span>
             starts here.
           </h1>
 
@@ -90,7 +90,7 @@ const handleGoogleSignup = async () => {
               <div
                 v-for="i in 4"
                 :key="i"
-                class="h-10 w-10 rounded-full border-2 border-[#0B0D0F] bg-gradient-to-br from-emerald-400 to-teal-600"
+                class="h-10 w-10 rounded-full border-2 border-[#0B0D0F] bg-gradient-to-br from-primary-400 to-teal-600"
                 :style="{ opacity: 1 - i * 0.15 }"
               />
             </div>
@@ -104,12 +104,12 @@ const handleGoogleSignup = async () => {
         <!-- Feature Cards -->
         <div class="grid grid-cols-2 gap-3">
           <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur-xl">
-            <UIcon name="i-lucide-brain" class="h-5 w-5 text-emerald-400 mb-2" />
+            <UIcon name="i-lucide-brain" class="h-5 w-5 text-primary-400 mb-2" />
             <p class="text-sm font-medium">AI Insights</p>
             <p class="text-xs text-white/40 mt-1">Powered by LLaMA 3</p>
           </div>
           <div class="rounded-2xl border border-white/5 bg-white/[0.03] p-4 backdrop-blur-xl">
-            <UIcon name="i-lucide-flame" class="h-5 w-5 text-orange-400 mb-2" />
+            <UIcon name="i-lucide-flame" class="h-5 w-5 text-primary-400 mb-2" />
             <p class="text-sm font-medium">Streak Tracking</p>
             <p class="text-xs text-white/40 mt-1">Don't break the chain</p>
           </div>
@@ -122,9 +122,9 @@ const handleGoogleSignup = async () => {
           <!-- Mobile Logo -->
           <div class="mb-8 flex items-center justify-center gap-3 lg:hidden">
             <div
-              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/15 ring-1 ring-emerald-500/20"
+              class="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-500/15 ring-1 ring-primary-500/20"
             >
-              <UIcon name="i-lucide-activity" class="h-5 w-5 text-emerald-400" />
+              <UIcon name="i-lucide-activity" class="h-5 w-5 text-primary-400" />
             </div>
             <span class="text-lg font-semibold">Momentum</span>
           </div>
@@ -230,7 +230,7 @@ const handleGoogleSignup = async () => {
               Already have an account?
               <NuxtLink
                 to="/login"
-                class="font-medium text-emerald-400 hover:text-emerald-300"
+                class="font-medium text-primary-400 hover:text-primary-300"
               >
                 Log in
               </NuxtLink>

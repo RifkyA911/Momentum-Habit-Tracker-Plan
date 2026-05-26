@@ -1,15 +1,17 @@
-import { authClient } from '~/utils/auth-client'
-
 export default defineNuxtRouteMiddleware(async (to) => {
-  const { data: session } = await authClient.useSession(useFetch)
+  // Use native Nuxt useFetch to properly handle SSR and pass cookies
+  const { data: session } = await useFetch('/api/auth/get-session', {
+    headers: useRequestHeaders(['cookie']) as Record<string, string>
+  })
 
   // If not authenticated and trying to access dashboard, redirect to login
-  if (!session.value?.user && to.path.startsWith('/dashboard')) {
+  if (!session.value && to.path.startsWith('/dashboard')) {
     return navigateTo('/login')
   }
 
   // If authenticated and trying to access auth pages, redirect to dashboard
-  if (session.value?.user && (to.path === '/login' || to.path === '/register')) {
+  const authPages = ['/login', '/register', '/forgot-password']
+  if (session.value && authPages.includes(to.path)) {
     return navigateTo('/dashboard')
   }
 })

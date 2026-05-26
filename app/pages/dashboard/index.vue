@@ -11,9 +11,9 @@ const { data: session } = await authClient.useSession(useFetch)
 const isAnalyzing = ref(false)
 
 const mockHabits = ref([
-  { id: 1, title: 'Drink 2L Water', icon: 'i-lucide-droplet', color: 'text-blue-500', bg: 'bg-blue-500/10', completed: true },
+  { id: 1, title: 'Drink 2L Water', icon: 'i-lucide-droplet', color: 'text-primary-500', bg: 'bg-primary-500/10', completed: true },
   { id: 2, title: 'Read 20 Pages', icon: 'i-lucide-book-open', color: 'text-amber-500', bg: 'bg-amber-500/10', completed: false },
-  { id: 3, title: 'Workout', icon: 'i-lucide-dumbbell', color: 'text-emerald-500', bg: 'bg-emerald-500/10', completed: false },
+  { id: 3, title: 'Workout', icon: 'i-lucide-dumbbell', color: 'text-primary-500', bg: 'bg-primary-500/10', completed: false },
   { id: 4, title: 'Coding 1 Hour', icon: 'i-lucide-code-2', color: 'text-indigo-500', bg: 'bg-indigo-500/10', completed: true },
 ])
 
@@ -80,7 +80,7 @@ const toggleHabit = (habitId: number) => {
             <!-- Oversized Checkbox visual representation -->
             <div 
               class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-              :class="habit.completed ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-gray-300 dark:border-gray-600'"
+              :class="habit.completed ? 'border-primary-500 bg-primary-500 text-white' : 'border-gray-300 dark:border-gray-600'"
             >
               <UIcon v-if="habit.completed" name="i-lucide-check" class="w-5 h-5" />
             </div>
@@ -105,10 +105,10 @@ const toggleHabit = (habitId: number) => {
             class="w-4 h-4 rounded-[2px] transition-colors duration-300"
             :class="[
               level === 0 ? 'bg-gray-100 dark:bg-gray-800/50' : '',
-              level === 1 ? 'bg-emerald-200 dark:bg-emerald-900/60' : '',
-              level === 2 ? 'bg-emerald-400 dark:bg-emerald-700/80' : '',
-              level === 3 ? 'bg-emerald-500 dark:bg-emerald-500' : '',
-              level === 4 ? 'bg-emerald-600 dark:bg-emerald-400' : ''
+              level === 1 ? 'bg-primary-200 dark:bg-primary-900/60' : '',
+              level === 2 ? 'bg-primary-400 dark:bg-primary-700/80' : '',
+              level === 3 ? 'bg-primary-500 dark:bg-primary-500' : '',
+              level === 4 ? 'bg-primary-600 dark:bg-primary-400' : ''
             ]"
             :title="`Activity level: ${level}`"
           ></div>
@@ -118,10 +118,10 @@ const toggleHabit = (habitId: number) => {
           <div class="flex items-center space-x-1">
             <span>Less</span>
             <div class="w-3 h-3 rounded-[2px] bg-gray-100 dark:bg-gray-800/50"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-emerald-900/60"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-emerald-700/80"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-emerald-500"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-emerald-400"></div>
+            <div class="w-3 h-3 rounded-[2px] bg-primary-900/60"></div>
+            <div class="w-3 h-3 rounded-[2px] bg-primary-700/80"></div>
+            <div class="w-3 h-3 rounded-[2px] bg-primary-500"></div>
+            <div class="w-3 h-3 rounded-[2px] bg-primary-400"></div>
             <span>More</span>
           </div>
         </div>
@@ -132,12 +132,12 @@ const toggleHabit = (habitId: number) => {
     <section class="space-y-4 pt-4">
       <div class="relative overflow-hidden rounded-2xl p-[1px] shadow-[0_0_20px_rgba(16,185,129,0.15)] group">
         <!-- Animated gradient border simulation -->
-        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-primary-500 via-teal-500 to-indigo-500 opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
         
         <div class="relative p-6 bg-white dark:bg-[#0f172a] rounded-2xl h-full flex flex-col md:flex-row items-center justify-between gap-6">
           <div class="flex-1 space-y-2">
             <div class="flex items-center space-x-2">
-              <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-emerald-500" />
+              <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-primary-500" />
               <h2 class="text-xl font-semibold">Momentum AI Insights</h2>
             </div>
             <p class="text-gray-500 dark:text-gray-400">

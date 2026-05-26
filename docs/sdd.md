@@ -11,7 +11,7 @@
 - Showcase modern engineering with realistic timelines and maintainable architecture.
 
 ## 3. Tech Stack (Revised)
-- **Package Manager:** Bun
+- **Package Manager:** Bun (STRICT: Do NOT use pnpm or npm)
 - **Frontend:** Nuxt 4, Vue 3, TypeScript, TailwindCSS v4, Nuxt UI / shadcn-vue
 - **Backend:** H3 (Nuxt Server Routes)
 - **Database:** PostgreSQL (Supabase / Neon) + Drizzle ORM
