@@ -1,209 +1,429 @@
-# Momentum - AI-Powered Habit Tracker
+<div align="center">
 
-Build momentum, not motivation. A modern habit tracking application with AI-powered insights, dopamine-driven UX, and GitHub-style consistency visualization.
+# 🚀 Momentum
 
-## Features
+### *Build momentum, not motivation*
 
-- **Optimistic UI Check-ins** - Instant visual feedback when completing habits
-- **GitHub-Style Heatmap** - Visualize your consistency over time
-- **AI Consistency Insights** - Powered by Groq (LLaMA 3) for actionable behavioral advice
-- **Streak Tracking** - Don't break the chain
-- **Better Auth** - Secure authentication with Google OAuth & email/password
+**AI-Powered Habit Tracker** dengan Optimistic UI, GitHub-Style Heatmap, dan Behavioral Insights
 
-## Tech Stack
+[![Nuxt](https://img.shields.io/badge/Nuxt-4.4.6-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-- **Framework**: Nuxt 4 (Vue 3 + TypeScript)
-- **Styling**: TailwindCSS v4 + Nuxt UI
-- **Database**: PostgreSQL (Supabase) + Drizzle ORM
-- **Auth**: Better Auth
-- **AI**: Groq (LLaMA 3)
-- **Package Manager**: pnpm
+[🚀 Demo](#) · [📖 Dokumentasi](./docs) · [🐛 Report Bug](https://github.com/yourusername/momentum/issues) · [✨ Request Feature](https://github.com/yourusername/momentum/issues)
 
-## Getting Started
+<img src="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png" alt="Momentum Preview" width="800px">
 
-### Prerequisites
+</div>
 
-- Node.js 22+
-- pnpm
-- PostgreSQL database (Supabase recommended)
-- Groq API key (optional, for AI features)
+---
 
-### Installation
+## 📖 Tentang Proyek
 
-1. Clone the repository:
+**Momentum** adalah aplikasi habit tracker modern yang berfokus pada:
+
+- 🎯 **Optimistic UI** - Feedback instan, tanpa loading spinner
+- 📊 **GitHub-Style Heatmap** - Visualisasi konsistensi 365 hari
+- 🤖 **AI Insights** - Analisis pola perilaku oleh Groq (LLaMA 3)
+- 🔥 **Streak Tracking** - Jangan putus rantai konsistensi
+- 🔐 **Better Auth** - OAuth Google & Email/Password
+
+### 💡 Mengapa Momentum Berbeda?
+
+| Fitur | Momentum | Habit Tracker Lain |
+|-------|----------|-------------------|
+| **UI Response** | ⚡ Instant (Optimistic) | 🐢 Loading spinner |
+| **Visualization** | 📊 GitHub-style Heatmap | 📅 Calendar biasa |
+| **AI Insights** | 🤖 Behavioral analysis | ❌ Manual tracking |
+| **UX Philosophy** | 🧠 Dopamine-driven | 📋 Checklist boring |
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+![Nuxt](https://img.shields.io/badge/Nuxt-00DC82?logo=nuxt.js&logoColor=white) **Nuxt 4** - Vue 3 Full-Stack Framework  
+![Vue](https://img.shields.io/badge/Vue-4FC08D?logo=vue.js&logoColor=white) **Vue 3** - Progressive JavaScript Framework  
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) **TypeScript** - Type Safety  
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-06B6D4?logo=tailwindcss&logoColor=white) **TailwindCSS v4** - Utility-First CSS  
+![Nuxt UI](https://img.shields.io/badge/Nuxt_UI-00DC82?logo=nuxt.js&logoColor=white) **Nuxt UI** - Component Library  
+
+### Backend & Database
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white) **PostgreSQL** (Supabase)  
+![Drizzle](https://img.shields.io/badge/Drizzle-C5F74F?logo=drizzle&logoColor=black) **Drizzle ORM** - TypeScript ORM  
+![Better Auth](https://img.shields.io/badge/Better_Auth-FF6B6B) **Better Auth** - Modern Auth  
+
+### AI & Cloud
+![Groq](https://img.shields.io/badge/Groq-FF6B35?logo=groq&logoColor=white) **Groq** - LLaMA 3 API  
+![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white) **Vercel** - Deployment  
+
+---
+
+## 🚀 Quick Start
+
+### 📋 Prerequisites
+
+![Node](https://img.shields.io/badge/Node.js-22+-339933?logo=node.js&logoColor=white) **Node.js 22+**  
+![pnpm](https://img.shields.io/badge/pnpm-11+-F69220?logo=pnpm&logoColor=white) **pnpm 11+**  
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-4169E1?logo=postgresql&logoColor=white) **PostgreSQL** (Supabase recommended)  
+![Groq API](https://img.shields.io/badge/Groq_API-Optional-FF6B35) **Groq API Key** (optional)  
+
+### ⚡ Installation
+
 ```bash
-git clone <your-repo-url>
-cd momentum_habit_tracker_plan
-```
+# 1️⃣ Clone repository
+git clone https://github.com/yourusername/momentum.git
+cd momentum
 
-2. Install dependencies:
-```bash
+# 2️⃣ Install dependencies
 pnpm install
+
+# 3️⃣ Setup environment variables
+cp .env.example .env
 ```
 
-3. Create a `.env` file with the following variables:
+### 🔧 Environment Variables
+
+Buat file `.env` dengan konfigurasi berikut:
+
 ```env
 # Database
 DATABASE_URL=your_postgresql_connection_string
 
-# Better Auth
-BETTER_AUTH_SECRET=your_secret_key_min_32_chars
+# Better Auth (minimal 32 karakter)
+BETTER_AUTH_SECRET=generate_with_openssl_rand_base64_32
 BETTER_AUTH_URL=http://localhost:3000
 
 # Google OAuth (optional)
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# Groq AI (optional)
+# Groq AI (optional untuk AI insights)
 GROQ_API_KEY=your_groq_api_key
 ```
 
-4. Run database migrations:
+<details>
+<summary>🔑 Cara Mendapatkan Environment Variables</summary>
+
+### DATABASE_URL (Supabase)
+1. Buat akun di [Supabase](https://supabase.com)
+2. Buat project baru
+3. Go to Settings > Database
+4. Copy connection string (use URI format)
+
+### BETTER_AUTH_SECRET
 ```bash
-pnpm run db:push
+openssl rand -base64 32
 ```
 
-5. Start the development server:
+### Google OAuth
+1. Buka [Google Cloud Console](https://console.cloud.google.com)
+2. Create OAuth 2.0 Client ID
+3. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+
+### GROQ_API_KEY
+1. Daftar di [Groq](https://console.groq.com)
+2. Buat API key di dashboard
+
+</details>
+
+### 🗃️ Database Setup
+
 ```bash
+# Generate migrations
+pnpm run db:generate
+
+# Push schema to database
+pnpm run db:push
+
+# (Optional) Open Drizzle Studio
+pnpm run db:studio
+```
+
+### 🎯 Run Development Server
+
+```bash
+# Start dev server
 pnpm dev
 ```
 
-Visit `http://localhost:3000` in your browser.
+Buka **http://localhost:3000** di browser 🎉
 
-## Project Structure
+---
+
+## 📁 Project Structure
 
 ```
-/app                    # Frontend application
-├── components/         # Vue components
-├── pages/              # Route pages
-├── layouts/            # Layout templates
-├── middleware/         # Route middleware
-├── utils/              # Utilities
-└── assets/             # Static assets
-
-/server                 # Backend API
-├── api/                # API endpoints (H3)
-├── db/                 # Database schema & migrations
-└── utils/              # Server utilities
-
-/docs                   # Documentation
-├── PRD.md             # Product requirements
-├── ARCHITECTURE.md    # System architecture
-├── DATABASE.md       # Database schema
-├── API_SPECS.md      # API specifications
-├── AI_STRATEGY.md    # AI integration strategy
-└── UI_UX.md          # UI/UX guidelines
+momentum/
+├── 📂 app/                    # Frontend Application
+│   ├── 📂 components/         # Vue Components
+│   │   ├── AppLogo.vue
+│   │   ├── NavbarAuth.vue
+│   │   └── ThemePicker.vue
+│   ├── 📂 pages/              # Route Pages
+│   │   ├── index.vue         # Landing page
+│   │   ├── dashboard/        # Dashboard pages
+│   │   ├── login.vue
+│   │   └── register.vue
+│   ├── 📂 layouts/            # Layout Templates
+│   │   ├── default.vue
+│   │   ├── auth.vue
+│   │   └── dashboard.vue
+│   ├── 📂 middleware/         # Route Guards
+│   │   └── auth.ts
+│   └── 📂 assets/             # Static Assets
+│       └── css/main.css
+│
+├── 📂 server/                 # Backend API
+│   ├── 📂 api/                # API Endpoints
+│   │   ├── auth/[...all].ts  # Better Auth routes
+│   │   ├── groq.post.ts      # AI insights endpoint
+│   │   └── health.ts         # Health check
+│   ├── 📂 db/                 # Database Layer
+│   │   └── schema.ts         # Drizzle schema
+│   └── 📂 utils/              # Server Utilities
+│       ├── auth.ts
+│       └── db.ts
+│
+├── 📂 docs/                    # Documentation
+│   ├── PRD.md                # Product Requirements
+│   ├── ARCHITECTURE.md       # System Design
+│   ├── DATABASE.md           # DB Schema
+│   ├── API_SPECS.md          # API Documentation
+│   ├── AI_STRATEGY.md        # AI Integration
+│   └── UI_UX.md              # Design Guidelines
+│
+├── 📄 package.json
+├── 📄 nuxt.config.ts
+├── 📄 drizzle.config.ts
+└── 📄 README.md
 ```
 
-## Database Schema
+---
+
+## 🗄️ Database Schema
 
 ### Core Tables
 
-- **users** - User profiles and authentication data
-- **habits** - User-defined habits (title, color, icon, frequency)
-- **habit_logs** - Daily check-in records for heatmap visualization
-- **streaks** - (Optional) Cached streak calculations
+```typescript
+// Users Table
+users {
+  id: uuid
+  email: string
+  name: string
+  created_at: timestamp
+}
 
-## API Endpoints
+// Habits Table
+habits {
+  id: uuid
+  user_id: uuid (FK)
+  title: string
+  description: string
+  color: string
+  icon: string
+  frequency: 'daily' | 'weekly'
+  created_at: timestamp
+}
 
-### Habits
-- `GET /api/habits` - Get all user habits
-- `POST /api/habits` - Create new habit
-- `PUT /api/habits/:id` - Update habit
-- `DELETE /api/habits/:id` - Delete habit
+// Habit Logs Table (untuk heatmap)
+habit_logs {
+  id: uuid
+  habit_id: uuid (FK)
+  user_id: uuid (FK)
+  completed_at: date
+  created_at: timestamp
+}
+```
 
-### Check-ins
-- `POST /api/habits/:id/log` - Log habit completion
-- `DELETE /api/habits/:id/log` - Undo today's check-in
+Diagram lengkap: [DATABASE.md](./docs/DATABASE.md)
 
-### Analytics
-- `GET /api/habits/heatmap` - Get yearly heatmap data
-- `POST /api/groq` - AI consistency insights
+---
 
-## Deployment
+## 🌐 API Endpoints
+
+### 🔐 Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/sign-up` | Register new user |
+| `POST` | `/api/auth/sign-in` | Login user |
+| `GET` | `/api/auth/session` | Get current session |
+| `POST` | `/api/auth/sign-out` | Logout user |
+
+### ✅ Habits
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/habits` | Get all user habits |
+| `POST` | `/api/habits` | Create new habit |
+| `PUT` | `/api/habits/:id` | Update habit |
+| `DELETE` | `/api/habits/:id` | Delete habit |
+
+### 📊 Check-ins & Analytics
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/habits/:id/log` | Log habit completion |
+| `DELETE` | `/api/habits/:id/log` | Undo today's check-in |
+| `GET` | `/api/habits/heatmap` | Get yearly heatmap data |
+| `POST` | `/api/groq` | AI consistency insights |
+
+Dokumentasi lengkap: [API_SPECS.md](./docs/API_SPECS.md)
+
+---
+
+## 🧠 Design Patterns
+
+### ⚡ Optimistic UI Flow
+
+```
+User Click → Instant UI Update → State Update → Background API Call
+    ↓              ↓                    ↓              ↓
+[✓ Checked]  [Loading...]      [Pinia Store]   [Success/Error]
+                                                         ↓
+                                              [Revert on Error + Toast]
+```
+
+### 🤖 AI Insights Pipeline
+
+```
+[User: "Analyze my Week"]
+        ↓
+[Fetch: Last 7 days logs]
+        ↓
+[Compress: Summary string]
+        ↓
+[Groq API: Behavioral analysis]
+        ↓
+[Response: Personalized advice]
+```
+
+**Prompt Engineering** detail: [AI_STRATEGY.md](./docs/AI_STRATEGY.md)
+
+---
+
+## 📚 Documentation
+
+| Doc | Description |
+|-----|-------------|
+| 📋 [PRD.md](./docs/PRD.md) | Product requirements & user stories |
+| 🏗️ [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | System architecture & design decisions |
+| 🗄️ [DATABASE.md](./docs/DATABASE.md) | Database schema & migrations |
+| 🔌 [API_SPECS.md](./docs/API_SPECS.md) | REST API documentation |
+| 🤖 [AI_STRATEGY.md](./docs/AI_STRATEGY.md) | AI integration & prompt design |
+| 🎨 [UI_UX.md](./docs/UI_UX.md) | Design system & UX guidelines |
+| 📄 [sdd.md](./docs/sdd.md) | Software design document |
+
+---
+
+## 🚢 Deployment
 
 ### Build for Production
 
 ```bash
+# Build
 pnpm build
-```
 
-### Preview Production Build
-
-```bash
+# Preview locally
 pnpm preview
 ```
 
 ### Deploy to Vercel
 
-The project is configured for Vercel deployment. Simply connect your repository and deploy.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/momentum)
 
-## Key Design Patterns
+1. Push ke GitHub
+2. Connect repository di Vercel
+3. Set environment variables
+4. Deploy! 🚀
 
-### Optimistic UI
+---
 
-User interactions feel instant:
-1. UI updates immediately on click
-2. State updates in Pinia store
-3. API request fires in background
-4. Reverts on error, shows toast notification
-
-### AI Insights Flow
-
-1. User clicks "Analyze my Week"
-2. Backend fetches last 7 days of habit logs
-3. Compresses data to summary string
-4. Sends to Groq API with behavioral psychology prompt
-5. Returns actionable, motivating feedback
-
-## Documentation
-
-For detailed technical documentation, see the `/docs` folder:
-
-- [Product Requirements (PRD)](./docs/PRD.md)
-- [System Architecture](./docs/ARCHITECTURE.md)
-- [Database Design](./docs/DATABASE.md)
-- [API Specifications](./docs/API_SPECS.md)
-- [AI Strategy](./docs/AI_STRATEGY.md)
-- [UI/UX Guidelines](./docs/UI_UX.md)
-- [Software Design Document](./docs/sdd.md)
-
-## Scripts
+## 🧪 Available Scripts
 
 ```bash
-pnpm dev          # Start dev server
-pnpm build        # Build for production
-pnpm preview      # Preview production build
-pnpm lint         # Run ESLint
-pnpm typecheck    # Run TypeScript checks
+# Development
+pnpm dev              # Start dev server
+pnpm build            # Build for production
+pnpm preview          # Preview production build
+
+# Code Quality
+pnpm lint             # Run ESLint
+pnpm typecheck        # TypeScript type checking
+
+# Database
+pnpm db:generate      # Generate Drizzle migrations
+pnpm db:push          # Push schema changes
+pnpm db:migrate       # Run migrations
+pnpm db:studio        # Open Drizzle Studio
 ```
 
-## Environment Variables
+---
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | Yes | Secret for session tokens (min 32 chars) |
-| `BETTER_AUTH_URL` | Yes | Base URL for auth callbacks |
-| `GOOGLE_CLIENT_ID` | No | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | No | Google OAuth client secret |
-| `GROQ_API_KEY` | No | Groq API key for AI features |
+## 🤝 Contributing
 
-## Contributing
+Kontribusi sangat diterima! Silakan buat **Pull Request**.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### 🔄 Development Workflow
 
-## License
+1. **Fork** repository ini
+2. **Clone** fork Anda
+3. Buat **branch** fitur (`git checkout -b feature/amazing-feature`)
+4. **Commit** perubahan (`git commit -m 'feat: add amazing feature'`)
+5. **Push** ke branch (`git push origin feature/amazing-feature`)
+6. Buat **Pull Request**
 
-MIT License - see [LICENSE](LICENSE) for details.
+### 📝 Commit Convention
 
-## Acknowledgments
+Gunakan [Conventional Commits](https://www.conventionalcommits.org/):
 
-- Built with [Nuxt](https://nuxt.com)
-- UI components from [Nuxt UI](https://ui.nuxt.com)
-- AI powered by [Groq](https://groq.com)
-- Auth by [Better Auth](https://better-auth.com)
+```
+feat: add AI weekly analysis
+fix: resolve heatmap rendering issue
+docs: update API documentation
+style: format code with prettier
+refactor: optimize optimistic UI logic
+test: add unit tests for habits API
+```
+
+---
+
+## 📝 License
+
+Proyek ini dilisensikan di bawah **MIT License** - lihat file [LICENSE](LICENSE) untuk detail.
+
+---
+
+## 🙏 Acknowledgments
+
+Dibuat dengan:
+
+- ![Nuxt](https://img.shields.io/badge/Nuxt-00DC82?logo=nuxt.js&logoColor=white) [Nuxt](https://nuxt.com)
+- 🎨 [Nuxt UI](https://ui.nuxt.com) - Component Library
+- ⚡ [Groq](https://groq.com) - AI Inference
+- 🔐 [Better Auth](https://better-auth.com) - Authentication
+- 🗄️ [Drizzle ORM](https://orm.drizzle.team) - Database Toolkit
+- 🎨 [TailwindCSS](https://tailwindcss.com) - Styling
+
+---
+
+## 📞 Contact & Support
+
+- 📧 Email: your.email@example.com
+- 🐛 Bug Reports: [GitHub Issues](https://github.com/yourusername/momentum/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/momentum/discussions)
+
+---
+
+<div align="center">
+
+**⭐ Jika proyek ini bermanfaat, berikan star! ⭐**
+
+Dibuat dengan ❤️ oleh [Your Name](https://github.com/yourusername)
+
+[⬆ Kembali ke Atas](#-momentum)
+
+</div>
