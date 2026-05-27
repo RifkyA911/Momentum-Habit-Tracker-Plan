@@ -1,7 +1,20 @@
 {
-  "name": "momentum_habit_tracker_plan",
+  "name": "momentum-habit-tracker",
+  "version": "1.0.0",
+  "description": "A calm, dopamine-aware behavioral reflection system and habit tracker.",
+  "author": "RifkyA911",
   "private": true,
   "type": "module",
+  "keywords": [
+    "nuxt4",
+    "vue3",
+    "habit-tracker",
+    "behavioral-analytics",
+    "momentum",
+    "neon-postgres",
+    "drizzle-orm",
+    "tailwind-css"
+  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
