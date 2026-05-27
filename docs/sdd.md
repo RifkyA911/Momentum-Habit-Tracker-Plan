@@ -1,16 +1,17 @@
-# Momentum - Software Design Document (SDD) v2
+# Momentum - Software Design Document (SDD) v3
 
 ## 1. Project Overview
 **Project Name:** Momentum  
-**Type:** AI-powered Habit Tracking Micro SaaS  
-**Goal:** Build a modern fullstack productivity platform with polished UX, optimistic UI, and AI-powered insights, designed as a production-grade portfolio.
+**Type:** AI-Powered Behavioral Reflection & Habit Tracker  
+**Goal:** Build a modern, calm, and emotionally intelligent productivity platform. Momentum is not a motivational coach; it is a reflective behavioral system designed to build consistency without hustle culture.
 
-## 2. Product Vision
-- Provide a clean, dopamine-driven productivity experience.
-- Use visual feedback (GitHub-style heatmap) to increase user consistency.
-- Showcase modern engineering with realistic timelines and maintainable architecture.
+## 2. Product Vision & Positioning
+**Core Philosophy:** "Build momentum, not motivation."
+- **Tone:** Calm, premium, intelligent, supportive, reflective, minimal, and emotionally aware. (Inspired by Apple Health insights and Linear).
+- **Avoid:** Cringe startup copy, productivity guru tone, hustle culture, gamification overload, and generic AI chatbots.
+- **Experience:** A dopamine-aware habit tracker that feels like a quiet consistency companion rather than a nagging assistant.
 
-## 3. Tech Stack (Revised)
+## 3. Tech Stack
 - **Package Manager:** Bun (STRICT: Do NOT use pnpm or npm)
 - **Frontend:** Nuxt 4, Vue 3, TypeScript, TailwindCSS v4, Nuxt UI / shadcn-vue
 - **Backend:** H3 (Nuxt Server Routes)
@@ -21,25 +22,29 @@
 - **Analytics & Monitoring:** PostHog & Sentry
 - **Deployment:** Vercel
 
-## 4. Architecture (Simplified & Realistic)
-To ensure the project can be completed in a 4-week MVP without over-engineering:
+## 4. Architecture
+To ensure the project remains robust and scalable yet realistic for an MVP:
 - **Client (Vue/Nuxt) → API Layer (H3) → Drizzle ORM → PostgreSQL**
-- *Note:* Removed "Repository Layer" to embrace Drizzle's SQL-like lightweight nature.
-- *Note:* Changed "Offline-first sync queue" to **Optimistic UI Updates**. Realtime sync is dropped from the MVP to focus on shipping core features fast, using Optimistic UI to provide an instant-feel experience.
+- **Optimistic UI Updates:** Drag-and-drop reordering, task completion, and habit creation happen instantly in the UI while syncing to the database in the background to provide a premium, snappy feel.
 
 ## 5. Core Features
-1. **Habit CRUD System**: Manage daily habits.
-2. **Optimistic UI Check-ins**: Clicking complete feels instant without waiting for server response.
-3. **Advanced Heatmap**: GitHub-style contribution graph.
-4. **AI Consistency Insights (Powered by Groq)**: Analyze user's habit logs and provide actionable feedback.
+1. **Habit & Task Management**: Group tasks into habits, sortable via native drag-and-drop.
+2. **Advanced Heatmap**: GitHub-style contribution graph that visualizes daily completion rates gracefully without horizontal scrolling, aligned precisely using CSS grid columns and filterable by dynamic year selection.
+3. **History Tracker**: Interactive 14-day history view with date navigation. Allows viewing which tasks existed and were completed on a particular day, with full capability to toggle completion history (writing back to database).
+4. **Behavioral AI Reflections**: Shifted from generic motivation to deep pattern detection.
 
-## 6. MVP Timeline (4 Weeks)
+## 6. AI Insight System Behavior (The Reflection Engine)
+The AI does not preach; it observes.
+- **Analyzes:** Habit completion patterns, streak stability, skipped days, active hours, strongest/weakest habits, and weekly consistency shifts.
+- **Generates:** Short insights, reflective observations, and subtle behavioral suggestions based purely on data.
+- **Examples:**
+  - *"You complete 42% more habits after 7 PM."*
+  - *"Your consistency drops slightly during weekends."*
+  - *"Reading is currently your most stable habit."*
+  - *"Missing one day rarely breaks momentum, but missing two often does."*
+
+## 7. MVP Timeline (4 Weeks)
 - **Week 1:** Project setup, Database Schema (Drizzle), Authentication (Better Auth).
-- **Week 2:** Habit CRUD + Optimistic UI state management + Heatmap visualization.
-- **Week 3:** AI Consistency Insights integration (Groq API), prompt engineering.
-- **Week 4:** UX Polish, Animations, Monitoring setup (Sentry/PostHog), Deployment.
-
-## 7. AI Implementation Strategy
-- **Provider:** Groq
-- **Model:** `llama3-8b-8192` or `llama3-70b-8192` (Extremely fast generation, cost-effective).
-- **Workflow:** User requests an insight → H3 server route fetches last 30 days of habit logs → Sends context to Groq API → Returns streaming response to frontend.
+- **Week 2:** Habit CRUD + Optimistic UI state management + Drag & Drop UX.
+- **Week 3:** Heatmap visualization + AI Behavioral Reflections (Groq API).
+- **Week 4:** UX Polish, Responsive Design, Monitoring setup, Deployment.

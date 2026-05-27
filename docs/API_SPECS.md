@@ -46,20 +46,28 @@ Membuat habit baru.
 }
 ```
 
-## 3. Habit Check-in (Logs)
+## 3. Tasks & Habit Management
 
-### `POST /api/habits/:id/log`
-Mencatat habit selesai pada hari ini. (Dipanggil di belakang layar setelah Optimistic UI).
+### `PATCH /api/habits/tasks/:taskId`
+Memperbarui task (teks, status selesai, atau tanggal selesai secara historis).
+- **Body:**
+```json
+{
+  "text": "Membaca 10 halaman",
+  "completed": true,
+  "completedAt": "2026-05-27T12:00:00.000Z"
+}
+```
+*(Parameter `completedAt` opsional, digunakan untuk mencatat penyelesaian task pada tanggal lampau secara historis).*
+
+### `DELETE /api/habits/tasks/:taskId`
+Menghapus task.
 - **Response (200 OK):**
 ```json
 {
-  "success": true,
-  "message": "Logged successfully"
+  "success": true
 }
 ```
-
-### `DELETE /api/habits/:id/log`
-Membatalkan (undo) check-in hari ini.
 
 ## 4. AI & Analytics
 
