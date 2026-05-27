@@ -6,10 +6,17 @@ const { data: session } = await useFetch('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
 
-// Mock heatmap data for preview
-const previewHeatmap = Array.from({ length: 28 }, () =>
-  Math.floor(Math.random() * 5),
-);
+// Heatmap data with real dates
+const today = new Date()
+const previewHeatmap = Array.from({ length: 28 }, (_, i) => {
+  const date = new Date(today)
+  date.setDate(date.getDate() - (27 - i))
+  return {
+    date: date.toISOString().split('T')[0],
+    level: Math.floor(Math.random() * 5),
+    label: date.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })
+  }
+});
 </script>
 
 <template>
@@ -29,7 +36,7 @@ const previewHeatmap = Array.from({ length: 28 }, () =>
       </div>
 
       <h1
-        class="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 leading-tight"
+        class="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 leading-tight"
       >
         Build momentum,<br />
         not motivation.
@@ -67,7 +74,7 @@ const previewHeatmap = Array.from({ length: 28 }, () =>
         </template>
 
         <UButton
-          to="/dashboard"
+          to="/demo"
           color="gray"
           variant="ghost"
           size="xl"
@@ -89,19 +96,28 @@ const previewHeatmap = Array.from({ length: 28 }, () =>
           <p class="text-sm text-gray-500">Visualize your streak seamlessly.</p>
         </div>
 
-        <div class="flex flex-wrap gap-2 justify-center">
+        <div class="grid grid-cols-7 gap-1.5 sm:gap-2 justify-center">
           <div
-            v-for="(level, index) in previewHeatmap"
+            v-for="(day, index) in previewHeatmap"
             :key="index"
-            class="w-6 h-6 sm:w-8 sm:h-8 rounded-[4px] transition-all duration-300 hover:scale-110 cursor-pointer"
-            :class="[
-              level === 0 ? 'bg-gray-100 dark:bg-gray-800' : '',
-              level === 1 ? 'bg-primary-200 dark:bg-primary-900/60' : '',
-              level === 2 ? 'bg-primary-400 dark:bg-primary-700/80' : '',
-              level === 3 ? 'bg-primary-500 dark:bg-primary-500' : '',
-              level === 4 ? 'bg-primary-600 dark:bg-primary-400' : '',
-            ]"
-          ></div>
+            class="group relative"
+          >
+            <div
+              class="w-full aspect-square rounded-[4px] transition-all duration-300 hover:scale-110 cursor-pointer"
+              :class="[
+                day.level === 0 ? 'bg-gray-100 dark:bg-gray-800' : '',
+                day.level === 1 ? 'bg-primary-200 dark:bg-primary-900/60' : '',
+                day.level === 2 ? 'bg-primary-400 dark:bg-primary-700/80' : '',
+                day.level === 3 ? 'bg-primary-500 dark:bg-primary-500' : '',
+                day.level === 4 ? 'bg-primary-600 dark:bg-primary-400' : '',
+              ]"
+            />
+            <!-- Tooltip -->
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+              {{ day.label }}
+              <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-900 dark:border-t-gray-700" />
+            </div>
+          </div>
         </div>
       </div>
 
