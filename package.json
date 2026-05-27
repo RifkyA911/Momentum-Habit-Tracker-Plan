@@ -36,6 +36,7 @@
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
     "@nuxt/eslint": "^1.15.2",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
