@@ -15,6 +15,50 @@ const habits = ref<any[]>([])
 const heatmapData = ref<{date: string, count: number}[]>([])
 const isLoading = ref(true)
 const isAnalyzing = ref(false)
+const currentStreak = useState<number | null>('currentStreak', () => null)
+
+// Helper to check if a date string is today
+const isToday = (dateStr: string) => {
+  if (!dateStr) return false
+  const d = new Date(dateStr)
+  const today = new Date()
+  return d.getDate() === today.getDate() &&
+         d.getMonth() === today.getMonth() &&
+         d.getFullYear() === today.getFullYear()
+}
+
+// Helper to calculate active streak from heatmap counts
+const calculateStreak = (data: { date: string; count: number }[]) => {
+  if (!data || data.length === 0) return 0
+  const activeDates = new Set(
+    data.filter(d => d.count > 0).map(d => d.date)
+  )
+  
+  let streak = 0
+  const checkDate = new Date()
+  
+  const todayStr = checkDate.toISOString().split('T')[0]
+  const yesterday = new Date()
+  yesterday.setDate(checkDate.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  
+  if (!activeDates.has(todayStr) && !activeDates.has(yesterdayStr)) {
+    return 0
+  }
+  
+  let currentCheck = activeDates.has(todayStr) ? checkDate : yesterday
+  
+  while (true) {
+    const dateStr = currentCheck.toISOString().split('T')[0]
+    if (activeDates.has(dateStr)) {
+      streak++
+      currentCheck.setDate(currentCheck.getDate() - 1)
+    } else {
+      break
+    }
+  }
+  return streak
+}
 
 // Drag and drop state for habits
 const dragHabitIndex = ref<number | null>(null)
@@ -43,6 +87,7 @@ const fetchHabits = async () => {
     })
     
     heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
+    currentStreak.value = calculateStreak(heatmapData.value)
   } catch (error) {
     console.error('Error fetching habits:', error)
   } finally {
@@ -254,7 +299,7 @@ onMounted(() => {
           <UButton color="black" @click="openCreateModal" size="xl" class="rounded-full px-8 shadow-md">Create Habit</UButton>
         </div>
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div
             v-for="(habit, idx) in habits" 
             :key="habit.id"
@@ -272,7 +317,7 @@ onMounted(() => {
           >
             <HabitCard 
               :habit="habit"
-              :tasks="habit.tasks"
+              :tasks="habit.tasks.filter((t: any) => !t.completed || (t.completedAt && isToday(t.completedAt)))"
               mode="live"
               class="h-full"
               @add-task="addTask"
