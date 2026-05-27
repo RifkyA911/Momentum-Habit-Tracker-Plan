@@ -113,9 +113,9 @@ const previewHeatmap = Array.from({ length: 28 }, (_, i) => {
               ]"
             />
             <!-- Tooltip -->
-            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded-lg bg-gray-900 dark:bg-gray-700 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-              {{ day.label }}
-              <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-900 dark:border-t-gray-700" />
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 rounded-lg bg-gray-900 dark:bg-gray-850 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg border border-white/10">
+              <span class="font-medium">{{ day.level > 0 ? `${day.level * 2} habits` : 'No habits' }}</span> completed on {{ day.label }}
+              <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-gray-900" />
             </div>
           </div>
         </div>
@@ -201,6 +201,50 @@ const previewHeatmap = Array.from({ length: 28 }, (_, i) => {
               </div>
             </li>
           </ul>
+        </div>
+      </div>
+
+      <!-- NEW SECTION: THE MOMENTUM METHOD (PHILOSOPHY & PILLARS) -->
+      <div class="mt-32 text-left">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
+            The Momentum Method
+          </h2>
+          <p class="text-lg text-gray-500 dark:text-gray-400">
+            Why traditional habit trackers fail, and how our behavioral-science-backed rhythm works.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white/50 dark:bg-[#0f172a]/20 backdrop-blur-sm border border-gray-150 dark:border-gray-800 p-8 rounded-3xl">
+            <div class="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-6">
+              <UIcon name="i-lucide-heart-crack" class="w-6 h-6" />
+            </div>
+            <h4 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Ditch Shame Streaks</h4>
+            <p class="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              Streaks should empower you, not hold you hostage. Momentum focuses on overall behavioral trends rather than penalizing you for a single missed day.
+            </p>
+          </div>
+
+          <div class="bg-white/50 dark:bg-[#0f172a]/20 backdrop-blur-sm border border-gray-150 dark:border-gray-800 p-8 rounded-3xl">
+            <div class="w-12 h-12 rounded-2xl bg-green-500/10 text-green-500 flex items-center justify-center mb-6">
+              <UIcon name="i-lucide-hourglass" class="w-6 h-6" />
+            </div>
+            <h4 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Rhythm > Routine</h4>
+            <p class="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              Align habits with your body's energy levels. The reflection engine maps your peak completion times to help you stack habits where they fit naturally.
+            </p>
+          </div>
+
+          <div class="bg-white/50 dark:bg-[#0f172a]/20 backdrop-blur-sm border border-gray-150 dark:border-gray-800 p-8 rounded-3xl">
+            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center mb-6">
+              <UIcon name="i-lucide-fingerprint" class="w-6 h-6" />
+            </div>
+            <h4 class="text-xl font-bold mb-3 text-gray-900 dark:text-white">Calm & Privacy First</h4>
+            <p class="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
+              No invasive notifications, no pushy alerts, no social pressure. A quiet space designed for pure focus on building self-awareness.
+            </p>
+          </div>
         </div>
       </div>
 
