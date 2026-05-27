@@ -33,8 +33,7 @@ const userMenuItems = computed(() => [
 
 <template>
   <div class="flex items-center space-x-3 sm:space-x-4">
-    <ThemePicker />
-    <UColorModeButton />
+    <UnifiedThemePicker />
 
     <!-- Logged In: Avatar + Dropdown -->
     <template v-if="session?.user">
