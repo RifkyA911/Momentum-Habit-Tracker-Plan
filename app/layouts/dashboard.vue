@@ -2,6 +2,7 @@
 import { authClient } from '~/utils/auth-client'
 
 const { data: session } = authClient.useSession()
+const currentStreak = useState<number | null>('currentStreak', () => null)
 </script>
 
 <template>
@@ -15,11 +16,12 @@ const { data: session } = authClient.useSession()
         </NuxtLink>
 
         <div class="flex items-center space-x-2 sm:space-x-4">
-          <!-- Streak Counter (Hidden on mobile entirely as per request for minimalism) -->
-          <div class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-primary-500/10 text-primary-500 rounded-full text-sm font-medium">
-            <UIcon name="i-lucide-flame" class="w-4 h-4" />
-            <span>12 Day Streak</span>
+          <!-- Streak Counter -->
+          <div v-if="currentStreak !== null" class="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-primary-500/10 text-primary-500 rounded-full text-sm font-medium shimmer-badge">
+            <UIcon name="i-lucide-flame" class="w-4 h-4 text-orange-500" />
+            <span>{{ currentStreak }} Day Streak</span>
           </div>
+          <div v-else class="hidden sm:flex w-28 h-8 rounded-full bg-gray-100 dark:bg-white/5 animate-pulse shrink-0" />
 
           <NavbarAuth />
         </div>
