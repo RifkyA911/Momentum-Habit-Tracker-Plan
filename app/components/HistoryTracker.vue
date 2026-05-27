@@ -19,6 +19,21 @@ const isSameDay = (d1Str: string, d2Str: string) => {
   return date1 === date2
 }
 
+// Get relevant tasks for a specific date
+const getTasksForDate = (habit: any, dateStr: string) => {
+  const tasks = habit.tasks || []
+  return tasks.filter((t: any) => {
+    const isCompleted = t.completed && t.completedAt
+    const completedOnThisDay = isCompleted && isSameDay(t.completedAt, dateStr)
+    const active = !t.completed
+    
+    const createdTime = new Date(t.createdAt).getTime()
+    const dayEndTime = new Date(dateStr + 'T23:59:59').getTime()
+    
+    return (active || completedOnThisDay) && (createdTime <= dayEndTime)
+  })
+}
+
 // Generate last 14 days
 const recentDays = computed(() => {
   const days = []
@@ -34,19 +49,11 @@ const recentDays = computed(() => {
     let completedTasks = 0
     
     props.habits.forEach(habit => {
-      // Habit tasks
-      const tasks = habit.tasks || []
-      tasks.forEach((t: any) => {
-        // Was this task created on or before this day?
-        const createdTime = new Date(t.createdAt).getTime()
-        const dayEndTime = new Date(dateStr + 'T23:59:59').getTime()
-        
-        if (createdTime <= dayEndTime) {
-          totalTasks++
-          // Was it completed on this day?
-          if (t.completedAt && isSameDay(t.completedAt, dateStr)) {
-            completedTasks++
-          }
+      const dayTasks = getTasksForDate(habit, dateStr)
+      dayTasks.forEach((t: any) => {
+        totalTasks++
+        if (t.completedAt && isSameDay(t.completedAt, dateStr)) {
+          completedTasks++
         }
       })
     })
@@ -141,7 +148,7 @@ const toggleTaskOnDate = async (task: any) => {
         <div class="flex items-center justify-center">
           <span v-if="d.totalTasks === 0" class="text-[10px] opacity-40">none</span>
           <span v-else class="text-[10px] font-medium" :class="selectedDate === d.dateStr ? 'text-white/90' : 'text-primary-500'">
-            {{ d.completedTasks }}/{{ d.totalTasks }}
+            {{ d.completedTasks }} / {{ d.totalTasks }}
           </span>
         </div>
       </button>
@@ -175,7 +182,7 @@ const toggleTaskOnDate = async (task: any) => {
           <!-- Tasks list for this habit -->
           <div class="pl-7 space-y-1">
             <div 
-              v-for="task in (habit.tasks || []).filter(t => new Date(t.createdAt).getTime() <= new Date(selectedDate + 'T23:59:59').getTime())"
+              v-for="task in getTasksForDate(habit, selectedDate)"
               :key="task.id"
               class="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-gray-100/50 dark:hover:bg-white/[0.02] transition-colors"
             >
@@ -206,7 +213,7 @@ const toggleTaskOnDate = async (task: any) => {
 
             <!-- Fallback if habit has tasks but none existed at selected date -->
             <div 
-              v-if="(habit.tasks || []).filter(t => new Date(t.createdAt).getTime() <= new Date(selectedDate + 'T23:59:59').getTime()).length === 0"
+              v-if="getTasksForDate(habit, selectedDate).length === 0"
               class="text-xs text-gray-400 italic py-1"
             >
               No tasks existed on this date.
