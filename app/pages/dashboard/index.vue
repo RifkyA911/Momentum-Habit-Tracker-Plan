@@ -1,162 +1,370 @@
 <script setup lang="ts">
-definePageMeta({
-  layout: 'dashboard',
-  middleware: 'auth'
+import { ref, onMounted } from 'vue'
+
+definePageMeta({ layout: 'dashboard', middleware: 'auth' })
+
+const toast = useToast()
+const { data: session } = await useFetch('/api/auth/get-session', {
+  headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
-import { authClient } from '~/utils/auth-client'
-import { ref } from 'vue'
 
-const { data: session } = await authClient.useSession(useFetch)
-
+const isCreateModalOpen = ref(false)
+const modalMode = ref<'create' | 'edit'>('create')
+const editingHabit = ref<any>(null)
+const habits = ref<any[]>([])
+const heatmapData = ref<{date: string, count: number}[]>([])
+const isLoading = ref(true)
 const isAnalyzing = ref(false)
 
-const mockHabits = ref([
-  { id: 1, title: 'Drink 2L Water', icon: 'i-lucide-droplet', color: 'text-primary-500', bg: 'bg-primary-500/10', completed: true },
-  { id: 2, title: 'Read 20 Pages', icon: 'i-lucide-book-open', color: 'text-amber-500', bg: 'bg-amber-500/10', completed: false },
-  { id: 3, title: 'Workout', icon: 'i-lucide-dumbbell', color: 'text-primary-500', bg: 'bg-primary-500/10', completed: false },
-  { id: 4, title: 'Coding 1 Hour', icon: 'i-lucide-code-2', color: 'text-indigo-500', bg: 'bg-indigo-500/10', completed: true },
-])
+// Drag and drop state for habits
+const dragHabitIndex = ref<number | null>(null)
+const dragOverHabitIndex = ref<number | null>(null)
 
-// Mock heatmap data generation
-const generateHeatmap = () => {
-  const days = []
-  for (let i = 0; i < 90; i++) { // Last 90 days
-    const level = Math.floor(Math.random() * 5) // 0 to 4
-    days.push(level)
+const fetchHabits = async () => {
+  try {
+    const h = await $fetch<any[]>('/api/habits')
+    
+    // For each habit, fetch its tasks
+    for (const habit of h) {
+      habit.tasks = await $fetch(`/api/habits/${habit.id}/tasks`)
+    }
+    
+    habits.value = h
+    
+    // Calculate heatmap data from completed tasks
+    const counts: Record<string, number> = {}
+    habits.value.forEach(habit => {
+      habit.tasks.forEach((task: any) => {
+        if (task.completed && task.completedAt) {
+          const date = new Date(task.completedAt).toISOString().split('T')[0]
+          counts[date] = (counts[date] || 0) + 1
+        }
+      })
+    })
+    
+    heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
+  } catch (error) {
+    console.error('Error fetching habits:', error)
+  } finally {
+    isLoading.value = false
   }
-  return days
 }
 
-const heatmapDays = generateHeatmap()
+const openCreateModal = () => {
+  modalMode.value = 'create'
+  editingHabit.value = null
+  isCreateModalOpen.value = true
+}
 
-const toggleHabit = (habitId: number) => {
-  const habit = mockHabits.value.find(h => h.id === habitId)
+const openEditModal = (habit: any) => {
+  modalMode.value = 'edit'
+  editingHabit.value = habit
+  isCreateModalOpen.value = true
+}
+
+const submitHabit = async (data: any) => {
+  if (modalMode.value === 'create') {
+    await $fetch('/api/habits', { method: 'POST', body: data })
+    toast.add({ title: 'Habit created', description: `${data.icon} ${data.title} added successfully.`, color: 'green' })
+  } else {
+    await $fetch(`/api/habits/${data.id}`, { method: 'PATCH', body: data })
+    toast.add({ title: 'Habit updated', description: 'Changes saved successfully.', color: 'green' })
+  }
+  fetchHabits()
+}
+
+const deleteHabit = async (id: string) => {
+  await $fetch(`/api/habits/${id}`, { method: 'DELETE' })
+  habits.value = habits.value.filter(h => h.id !== id)
+  toast.add({ title: 'Habit deleted', description: 'The habit and its tasks were removed.', color: 'red' })
+  fetchHabits()
+}
+
+const addTask = async (habitId: string, text: string) => {
+  const task = await $fetch(`/api/habits/${habitId}/tasks`, { method: 'POST', body: { text } })
+  const habit = habits.value.find(h => h.id === habitId)
+  if (habit) habit.tasks.unshift(task)
+}
+
+const toggleTask = async (task: any) => {
+  const newCompleted = !task.completed
+  task.completed = newCompleted
+  task.completedAt = newCompleted ? new Date().toISOString() : null
+  
+  await $fetch(`/api/habits/tasks/${task.id}`, { method: 'PATCH', body: { completed: newCompleted } })
+  fetchHabits()
+}
+
+const deleteTask = async (taskId: string) => {
+  await $fetch(`/api/habits/tasks/${taskId}`, { method: 'DELETE' })
+  for (const habit of habits.value) {
+    habit.tasks = habit.tasks.filter((t: any) => t.id !== taskId)
+  }
+  fetchHabits()
+}
+
+const reorderTasks = async (habitId: string, fromIdx: number, toIdx: number) => {
+  const habit = habits.value.find(h => h.id === habitId)
   if (habit) {
-    habit.completed = !habit.completed
+    const tasks = [...habit.tasks]
+    const [moved] = tasks.splice(fromIdx, 1)
+    tasks.splice(toIdx, 0, moved)
+    habit.tasks = tasks
+
+    // Prepare payload
+    const payload = tasks.map((t: any, index: number) => ({
+      id: t.id,
+      orderIndex: index
+    }))
+
+    // Save to DB in background
+    $fetch('/api/habits/tasks/reorder', { 
+      method: 'PATCH', 
+      body: { tasks: payload }
+    }).catch(err => {
+      console.error('Failed to reorder tasks:', err)
+      toast.add({ title: 'Reorder Failed', description: 'Failed to sync reorder to database.', color: 'red' })
+      fetchHabits() // revert
+    })
   }
 }
+
+// --- Habit Drag & Drop ---
+const onDragHabitStart = (idx: number, e: DragEvent) => {
+  dragHabitIndex.value = idx
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(idx))
+  }
+}
+
+const onDragHabitOver = (idx: number, e: DragEvent) => {
+  e.preventDefault()
+  dragOverHabitIndex.value = idx
+}
+
+const onDragHabitLeave = () => {
+  dragOverHabitIndex.value = null
+}
+
+const onHabitDrop = (idx: number) => {
+  if (dragHabitIndex.value !== null && dragHabitIndex.value !== idx) {
+    const fromIdx = dragHabitIndex.value
+    const h = [...habits.value]
+    const [moved] = h.splice(fromIdx, 1)
+    h.splice(idx, 0, moved)
+    habits.value = h
+
+    // Prepare payload
+    const payload = h.map((item, index) => ({
+      id: item.id,
+      orderIndex: index
+    }))
+
+    // Save to DB
+    $fetch('/api/habits/reorder', { 
+      method: 'PATCH', 
+      body: { habits: payload }
+    }).catch(err => {
+      console.error('Failed to reorder habits:', err)
+      toast.add({ title: 'Reorder Failed', description: 'Failed to sync habit order to database.', color: 'red' })
+      fetchHabits() // revert
+    })
+  }
+  dragHabitIndex.value = null
+  dragOverHabitIndex.value = null
+}
+
+const onDragHabitEnd = () => {
+  dragHabitIndex.value = null
+  dragOverHabitIndex.value = null
+}
+
+const analyzeWeek = () => {
+  isAnalyzing.value = true
+  setTimeout(() => {
+    isAnalyzing.value = false
+    toast.add({ 
+      title: 'Pattern Detected', 
+      description: 'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.', 
+      color: 'primary',
+      icon: 'i-lucide-eye',
+      timeout: 8000
+    })
+  }, 2000)
+}
+
+onMounted(() => {
+  fetchHabits()
+})
 </script>
 
 <template>
-  <div class="space-y-10">
-    
-    <!-- Welcome Header -->
+  <div class="space-y-8 pb-10">
     <header>
-      <h1 class="text-3xl font-bold tracking-tight">
+      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
         Hey {{ session?.user?.name?.split(' ')[0] || 'there' }}, ready to build momentum? 🔥
       </h1>
-      <p class="text-gray-500 dark:text-gray-400 mt-2">
-        You have completed {{ mockHabits.filter(h => h.completed).length }} out of {{ mockHabits.length }} habits today.
-      </p>
+      <p class="text-gray-500 dark:text-gray-400">Track your habits, stay consistent, and let AI guide you.</p>
     </header>
 
-    <!-- Habit List -->
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold flex items-center space-x-2">
-        <UIcon name="i-lucide-list-todo" class="w-5 h-5 text-gray-400" />
-        <span>Today's Habits</span>
-      </h2>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div 
-          v-for="habit in mockHabits" 
-          :key="habit.id"
-          class="group flex items-center justify-between p-4 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f172a] hover:border-gray-300 dark:hover:border-gray-700 transition-all duration-200 cursor-pointer"
-          :class="habit.completed ? 'opacity-70' : ''"
-          @click="toggleHabit(habit.id)"
-        >
-          <div class="flex items-center space-x-4">
-            <div :class="[habit.bg, habit.color, 'p-3 rounded-xl']">
-              <UIcon :name="habit.icon" class="w-6 h-6" />
-            </div>
-            <div>
-              <h3 class="font-medium text-lg" :class="habit.completed ? 'line-through text-gray-400' : ''">
-                {{ habit.title }}
-              </h3>
-            </div>
-          </div>
-          
-          <div class="px-2">
-            <!-- Oversized Checkbox visual representation -->
-            <div 
-              class="w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-200"
-              :class="habit.completed ? 'border-primary-500 bg-primary-500 text-white' : 'border-gray-300 dark:border-gray-600'"
-            >
-              <UIcon v-if="habit.completed" name="i-lucide-check" class="w-5 h-5" />
-            </div>
-          </div>
-        </div>
+    <div v-if="isLoading" class="space-y-10">
+      <USkeleton class="h-16 w-full rounded-3xl" />
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <USkeleton class="h-[300px] w-full rounded-3xl" />
+        <USkeleton class="h-[300px] w-full rounded-3xl" />
+        <USkeleton class="h-[300px] w-full rounded-3xl" />
       </div>
-    </section>
+    </div>
 
-    <!-- Heatmap Visualization -->
-    <section class="space-y-4">
-      <h2 class="text-lg font-semibold flex items-center space-x-2">
-        <UIcon name="i-lucide-activity" class="w-5 h-5 text-gray-400" />
-        <span>Last 90 Days Activity</span>
-      </h2>
+    <div v-else class="space-y-10">
       
-      <div class="p-6 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f172a] overflow-x-auto">
-        <div class="flex flex-wrap gap-1.5 w-full min-w-min">
-          <!-- Tooltip simulation could go here -->
-          <div 
-            v-for="(level, index) in heatmapDays" 
-            :key="index"
-            class="w-4 h-4 rounded-[2px] transition-colors duration-300"
+      <!-- Header Info -->
+      <div class="bg-primary-500/10 border border-primary-500/20 text-primary-700 dark:text-primary-400 px-6 py-4 rounded-3xl flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <UIcon name="i-lucide-check-circle-2" class="w-6 h-6" />
+          <span class="font-medium text-lg">You have completed {{ heatmapData.length > 0 ? heatmapData[heatmapData.length-1].count : 0 }} tasks today!</span>
+        </div>
+        <span class="text-sm font-medium opacity-80">Keep the momentum going 🔥</span>
+      </div>
+
+      <!-- Section: Your Habits -->
+      <div class="space-y-6">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-2xl font-bold flex items-center gap-2">
+            <UIcon name="i-lucide-layers" class="w-6 h-6 text-primary-500" />
+            <span>Your Habits</span>
+          </h2>
+          <UButton 
+            color="primary" 
+            variant="solid" 
+            icon="i-lucide-plus" 
+            class="rounded-full px-6 shadow-sm"
+            size="lg"
+            @click="openCreateModal"
+          >
+            New Habit
+          </UButton>
+        </div>
+
+        <div v-if="habits.length === 0" class="py-20 text-center border-2 border-dashed border-gray-200 dark:border-white/10 rounded-3xl bg-white/50 dark:bg-white/[0.01]">
+          <UIcon name="i-lucide-folder-plus" class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+          <h3 class="text-xl font-bold mb-2">No habits yet</h3>
+          <p class="text-gray-500 dark:text-gray-400 text-base mb-8 max-w-sm mx-auto">Create your first habit category to start tracking your daily progress.</p>
+          <UButton color="black" @click="openCreateModal" size="xl" class="rounded-full px-8 shadow-md">Create Habit</UButton>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div
+            v-for="(habit, idx) in habits" 
+            :key="habit.id"
+            draggable="true"
+            @dragstart="onDragHabitStart(idx, $event)"
+            @dragover="onDragHabitOver(idx, $event)"
+            @dragleave="onDragHabitLeave"
+            @drop="onHabitDrop(idx)"
+            @dragend="onDragHabitEnd"
+            class="transition-all duration-200 cursor-grab active:cursor-grabbing h-full"
             :class="[
-              level === 0 ? 'bg-gray-100 dark:bg-gray-800/50' : '',
-              level === 1 ? 'bg-primary-200 dark:bg-primary-900/60' : '',
-              level === 2 ? 'bg-primary-400 dark:bg-primary-700/80' : '',
-              level === 3 ? 'bg-primary-500 dark:bg-primary-500' : '',
-              level === 4 ? 'bg-primary-600 dark:bg-primary-400' : ''
+              dragOverHabitIndex === idx ? 'scale-105 opacity-80 shadow-xl ring-2 ring-primary-500 rounded-3xl' : '',
+              dragHabitIndex === idx ? 'opacity-40 scale-95' : 'opacity-100'
             ]"
-            :title="`Activity level: ${level}`"
-          ></div>
-        </div>
-        <div class="mt-4 flex items-center justify-between text-xs text-gray-400">
-          <span>90 days ago</span>
-          <div class="flex items-center space-x-1">
-            <span>Less</span>
-            <div class="w-3 h-3 rounded-[2px] bg-gray-100 dark:bg-gray-800/50"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-primary-900/60"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-primary-700/80"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-primary-500"></div>
-            <div class="w-3 h-3 rounded-[2px] bg-primary-400"></div>
-            <span>More</span>
+          >
+            <HabitCard 
+              :habit="habit"
+              :tasks="habit.tasks"
+              mode="live"
+              class="h-full"
+              @add-task="addTask"
+              @toggle-task="toggleTask"
+              @delete-task="deleteTask"
+              @delete-habit="deleteHabit"
+              @edit-habit="openEditModal"
+              @reorder-tasks="reorderTasks"
+            />
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- AI Insights Panel Placeholder -->
-    <section class="space-y-4 pt-4">
-      <div class="relative overflow-hidden rounded-2xl p-[1px] shadow-[0_0_20px_rgba(16,185,129,0.15)] group">
-        <!-- Animated gradient border simulation -->
-        <div class="absolute inset-0 bg-gradient-to-r from-primary-500 via-teal-500 to-indigo-500 opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
-        
-        <div class="relative p-6 bg-white dark:bg-[#0f172a] rounded-2xl h-full flex flex-col md:flex-row items-center justify-between gap-6">
-          <div class="flex-1 space-y-2">
-            <div class="flex items-center space-x-2">
-              <UIcon name="i-lucide-sparkles" class="w-5 h-5 text-primary-500" />
-              <h2 class="text-xl font-semibold">Momentum AI Insights</h2>
-            </div>
-            <p class="text-gray-500 dark:text-gray-400">
-              Analyze your last week's consistency and get actionable, dopamine-driven feedback from LLaMA 3.
+      <!-- Section: Momentum Stats -->
+      <div class="space-y-6">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <UIcon name="i-lucide-bar-chart-2" class="w-6 h-6 text-primary-500" />
+          <span>Momentum Stats</span>
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Best Streak</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">12 days</span>
+          </div>
+          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Completion Rate</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">84%</span>
+          </div>
+          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Most Consistent</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">Reading</span>
+          </div>
+          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
+            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Peak Time</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">8 PM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section: Consistency -->
+      <div class="space-y-6">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <UIcon name="i-lucide-activity" class="w-6 h-6 text-primary-500" />
+          <span>Consistency</span>
+        </h2>
+        <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-8 shadow-sm overflow-hidden">
+          <GitHubHeatmap :data="heatmapData" />
+        </div>
+      </div>
+
+      <!-- Section: History Tracker -->
+      <div class="space-y-6">
+        <HistoryTracker :habits="habits" @refresh="fetchHabits" />
+      </div>
+
+      <!-- Section: Behavioral Reflections -->
+      <div class="space-y-6">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <UIcon name="i-lucide-brain-circuit" class="w-6 h-6 text-primary-500" />
+          <span>Behavioral Reflections</span>
+        </h2>
+        <div class="bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-6">
+          <div class="w-12 h-12 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0">
+            <UIcon name="i-lucide-sparkles" class="w-6 h-6" />
+          </div>
+          <div class="flex-1 text-center md:text-left">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Observe Your Patterns</h3>
+            <p class="text-base text-gray-500 dark:text-gray-400 max-w-2xl">
+              See which habits stabilize your routine, when your consistency peaks, and where momentum tends to break.
             </p>
           </div>
-          
           <UButton 
-            to="/groq-test"
-            color="emerald" 
+            color="white" 
             variant="solid" 
-            size="lg"
-            class="shrink-0"
+            size="lg" 
+            class="rounded-xl px-6 font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border border-gray-200 dark:border-white/10 shrink-0"
+            :loading="isAnalyzing"
+            @click="analyzeWeek"
           >
-            Analyze my Week
+            Reflect on Data
           </UButton>
         </div>
       </div>
-    </section>
 
+    </div>
+
+    <!-- Modals -->
+    <HabitCreateModal 
+      v-model="isCreateModalOpen" 
+      :mode="modalMode"
+      :initial-data="editingHabit"
+      @submit="submitHabit" 
+    />
   </div>
 </template>
