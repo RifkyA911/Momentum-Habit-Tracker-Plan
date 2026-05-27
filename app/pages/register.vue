@@ -146,59 +146,110 @@ const handleGoogleSignup = async () => {
               {{ error }}
             </div>
 
-            <form class="space-y-5" @submit.prevent="handleRegister">
-              <UFormGroup label="Full Name">
+            <form class="space-y-6" @submit.prevent="handleRegister">
+              <!-- Name -->
+              <div class="space-y-2 flex flex-col">
+                <label class="text-sm font-medium text-white/70"> Full Name </label>
                 <UInput
                   v-model="name"
                   type="text"
                   size="xl"
                   placeholder="John Doe"
-                  color="white"
-                  variant="outline"
+                  variant="none"
                   :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    wrapper: 'relative',
+                    base: `
+                    h-14
+                    rounded-2xl
+                    border
+                    border-white/8
+                    bg-white/[0.03]
+                    px-4
+                    text-white
+                    placeholder:text-white/20
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    focus:border-primary-400/40
+                    focus:bg-white/[0.05]
+                    focus:ring-4
+                    focus:ring-primary-500/10
+                `,
                   }"
                 />
-              </UFormGroup>
+              </div>
 
-              <UFormGroup label="Email">
+              <!-- Email -->
+              <div class="space-y-2 flex flex-col">
+                <label class="text-sm font-medium text-white/70"> Email </label>
                 <UInput
                   v-model="email"
                   type="email"
                   size="xl"
                   placeholder="hello@example.com"
-                  color="white"
-                  variant="outline"
+                  variant="none"
                   :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    wrapper: 'relative',
+                    base: `
+                    h-14
+                    rounded-2xl
+                    border
+                    border-white/8
+                    bg-white/[0.03]
+                    px-4
+                    text-white
+                    placeholder:text-white/20
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    focus:border-primary-400/40
+                    focus:bg-white/[0.05]
+                    focus:ring-4
+                    focus:ring-primary-500/10
+                `,
                   }"
                 />
-              </UFormGroup>
+              </div>
 
-              <UFormGroup label="Password">
+              <!-- Password -->
+              <div class="space-y-2 flex flex-col">
+                <label class="text-sm font-medium text-white/70"> Password </label>
                 <UInput
                   v-model="password"
                   type="password"
                   size="xl"
                   placeholder="••••••••"
-                  color="white"
-                  variant="outline"
+                  variant="none"
                   :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    wrapper: 'relative',
+                    base: `
+                    h-14
+                    rounded-2xl
+                    border
+                    border-white/8
+                    bg-white/[0.03]
+                    px-4
+                    text-white
+                    placeholder:text-white/20
+                    backdrop-blur-xl
+                    transition-all
+                    duration-300
+                    focus:border-primary-400/40
+                    focus:bg-white/[0.05]
+                    focus:ring-4
+                    focus:ring-primary-500/10
+                `,
                   }"
                 />
-              </UFormGroup>
+              </div>
 
+              <!-- Button -->
               <UButton
                 type="submit"
                 block
                 size="xl"
-                color="primary"
                 :loading="loading"
-                class="mt-2 rounded-2xl h-14 text-base font-medium"
+                class="h-14 mt-4 rounded-2xl border-0 bg-primary-500 text-base font-semibold text-white transition-all duration-300 hover:bg-primary-400 hover:shadow-[0_0_30px_rgba(16,185,129,0.35)] dark:hover:shadow-[0_0_30px_rgba(249,115,22,0.35)]"
               >
                 Create Account
               </UButton>
