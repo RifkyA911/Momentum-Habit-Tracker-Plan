@@ -3,6 +3,17 @@ import { authClient } from '~/utils/auth-client'
 
 const { data: session } = authClient.useSession()
 const currentStreak = useState<number | null>('currentStreak', () => null)
+
+onMounted(async () => {
+  if (currentStreak.value === null) {
+    try {
+      const stats = await $fetch('/api/habits/stats')
+      currentStreak.value = stats.streak
+    } catch (e) {
+      currentStreak.value = 0
+    }
+  }
+})
 </script>
 
 <template>
