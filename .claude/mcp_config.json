@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "momentum-db-tools": {
+      "command": "bun",
+      "args": ["run", "mcp:server"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
+    }
+  }
+}

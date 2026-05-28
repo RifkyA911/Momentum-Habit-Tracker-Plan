@@ -21,7 +21,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "mcp:server": "tsx server/mcp/index.ts"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.21",
@@ -37,11 +38,13 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.4.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@nuxt/eslint": "^1.15.2",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",
+    "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.0"
   },

@@ -246,16 +246,72 @@ const openReflectionModal = async () => {
   isAnalyzing.value = true
   aiReflection.value = ''
   try {
-    // Simulasi: fetch insight dari endpoint MCP+Groq
-    // Ganti dengan call ke API MCP+Groq jika sudah tersedia
-    await new Promise(r => setTimeout(r, 2200))
-    // Contoh hasil insight
-    aiReflection.value =
-      'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.'
-    // Untuk implementasi nyata, fetch ke endpoint backend yang sudah integrasi MCP+Groq
-    // const result = await $fetch('/api/ai/reflection')
-    // aiReflection.value = result.insight
+    // Gather habit data from existing habits array
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+    let completedTasks: any[] = []
+    habits.value.forEach(habit => {
+      habit.tasks.forEach((task: any) => {
+        if (task.completed && task.completedAt && new Date(task.completedAt) >= thirtyDaysAgo) {
+          completedTasks.push({
+            habitTitle: habit.title,
+            text: task.text,
+            completedAt: task.completedAt
+          })
+        }
+      })
+    })
+
+    // Calculate habit stats
+    const habitStats: Record<string, number> = {}
+    completedTasks.forEach(task => {
+      habitStats[task.habitTitle] = (habitStats[task.habitTitle] || 0) + 1
+    })
+
+    const habitStatsArray = Object.entries(habitStats).map(([habitTitle, completedCount]) => ({
+      habitTitle,
+      completedCount
+    }))
+
+    // Calculate time patterns
+    const timePatterns: Record<string, number> = {}
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const hour = new Date(task.completedAt).getHours()
+        const timeSlot = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
+        timePatterns[timeSlot] = (timePatterns[timeSlot] || 0) + 1
+      }
+    })
+
+    // Calculate day patterns
+    const dayPatterns: Record<string, number> = {}
+    completedTasks.forEach(task => {
+      if (task.completedAt) {
+        const day = new Date(task.completedAt).toLocaleDateString('en-US', { weekday: 'long' })
+        dayPatterns[day] = (dayPatterns[day] || 0) + 1
+      }
+    })
+
+    const habitData = {
+      totalHabits: habits.value.length,
+      totalCompletions: completedTasks.length,
+      habitStats: habitStatsArray,
+      timePatterns,
+      dayPatterns
+    }
+
+    const result = await $fetch('/api/groq', {
+      method: 'POST',
+      body: {
+        type: 'reflection',
+        habitData
+      }
+    })
+
+    aiReflection.value = result.insight
   } catch (e) {
+    console.error('AI reflection error:', e)
     aiReflection.value = 'Sorry, AI could not analyze your data right now.'
   } finally {
     isAnalyzing.value = false
@@ -447,11 +503,6 @@ onMounted(() => {
       :mode="modalMode"
       :initial-data="editingHabit"
       @submit="submitHabit"
-    />
-    <ReflectionModal
-      v-model="isReflectionModalOpen"
-      :ai-reflection="aiReflection"
-      @close="isReflectionModalOpen = false"
     />
   </div>
 </template>
