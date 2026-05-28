@@ -167,7 +167,7 @@ const formatTooltip = (day: { date: string; count: number }) => {
     <div class="w-px bg-gray-200 dark:bg-gray-800/80 self-stretch my-1 shrink-0" />
 
     <!-- Year Selector (right side) -->
-    <div class="flex flex-col gap-1.5 shrink-0 max-h-[110px] overflow-y-auto pr-1 select-none scrollbar-thin scroll-container">
+    <div class="flex flex-col gap-1.5 shrink-0 max-h-[160px] overflow-y-auto pr-1 select-none scrollbar-thin scroll-container">
       <button
         v-for="y in yearOptions"
         :key="y"

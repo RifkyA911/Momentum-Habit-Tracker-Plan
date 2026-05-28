@@ -69,7 +69,7 @@ const onDragEnd = () => {
           {{ props.habit.icon }}
         </div>
         <div>
-          <h3 class="font-bold text-lg text-gray-900 dark:text-white">{{ props.habit.title }}</h3>
+          <h3 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" :title="props.habit.title">{{ props.habit.title }}</h3>
           <p class="text-sm text-gray-500 line-clamp-1">{{ props.habit.description || 'No description' }}</p>
         </div>
       </div>
@@ -125,19 +125,19 @@ const onDragEnd = () => {
         @dragleave="onDragLeave"
         @drop="onDrop(idx)"
         @dragend="onDragEnd"
-        class="group flex items-center gap-2.5 py-1.5 px-2 rounded-xl transition-all cursor-grab active:cursor-grabbing"
+        class="group flex items-start gap-2.5 py-1.5 px-2 rounded-xl transition-all cursor-default"
         :class="[
           dragOverIndex === idx ? 'bg-primary-50 dark:bg-primary-900/20 border-t-2 border-primary-400' : 'hover:bg-gray-50 dark:hover:bg-white/5',
           dragIndex === idx ? 'opacity-40' : 'opacity-100'
         ]"
       >
         <!-- Drag handle -->
-        <UIcon name="i-lucide-grip-vertical" class="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        <UIcon name="i-lucide-grip-vertical" class="w-4 h-4 text-gray-300 dark:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5" />
 
         <!-- Checkbox -->
         <button
           @click="emit('toggleTask', task)"
-          class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all"
+          class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all mt-0.5"
           :style="task.completed ? { backgroundColor: props.habit.color, borderColor: props.habit.color } : { borderColor: 'currentColor' }"
           :class="!task.completed ? 'text-gray-300 dark:text-gray-600 hover:text-gray-400' : 'text-white'"
         >
@@ -146,8 +146,9 @@ const onDragEnd = () => {
 
         <!-- Task text -->
         <span 
-          class="flex-1 text-sm transition-colors truncate"
+          class="flex-1 text-sm transition-colors line-clamp-2 leading-tight"
           :class="task.completed ? 'line-through text-gray-400' : 'text-gray-700 dark:text-gray-300'"
+          :title="task.text"
         >
           {{ task.text }}
         </span>

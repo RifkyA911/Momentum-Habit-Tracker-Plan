@@ -124,10 +124,13 @@ const toggleTaskOnDate = async (task: any) => {
 
 <template>
   <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-6 shadow-sm">
-    <div class="flex items-center gap-2 mb-6">
-      <UIcon name="i-lucide-history" class="w-6 h-6 text-primary-500" />
-      <h3 class="text-xl font-bold text-gray-900 dark:text-white">History Tracker</h3>
-      <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2.5 py-0.5 rounded-full font-medium ml-2">Last 14 Days</span>
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <UIcon name="i-lucide-history" class="w-6 h-6 text-primary-500" />
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">History Tracker</h3>
+        <span class="text-xs text-gray-400 bg-gray-100 dark:bg-white/5 px-2.5 py-0.5 rounded-full font-medium ml-2">Last 14 Days</span>
+      </div>
+      <UButton to="/dashboard/history" color="primary" variant="soft" size="sm" icon="i-lucide-arrow-right" trailing>View All</UButton>
     </div>
 
     <!-- Horizontal scrollable day list -->
