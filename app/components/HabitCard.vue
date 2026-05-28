@@ -7,7 +7,7 @@ const props = defineProps<{
   mode: 'live' | 'demo'
 }>()
 
-const emit = defineEmits(['addTask', 'toggleTask', 'deleteTask', 'deleteHabit', 'editHabit', 'reorderTasks'])
+const emit = defineEmits(['addTask', 'toggleTask', 'deleteTask', 'deleteHabit', 'editHabit', 'reorderTasks', 'dragHabitStart'])
 
 const newTaskText = ref('')
 const isAdding = ref(false)
@@ -22,7 +22,7 @@ const submitTask = () => {
   isAdding.value = false
 }
 
-// --- Drag & Drop ---
+// --- Drag & Drop for tasks within this card ---
 const dragIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
 
@@ -55,27 +55,44 @@ const onDragEnd = () => {
   dragIndex.value = null
   dragOverIndex.value = null
 }
+
+// --- Habit-level drag (header only) ---
+const headerRef = ref<HTMLElement | null>(null)
+
+const onHeaderDragStart = (e: DragEvent) => {
+  emit('dragHabitStart', e)
+}
 </script>
 
 <template>
   <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-5 shadow-sm hover:border-gray-300 dark:hover:border-white/10 transition-colors">
     <!-- Header -->
     <div class="flex items-start justify-between mb-4">
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
+        <!-- Drag handle for habit reorder -->
+        <div
+          draggable="true"
+          @dragstart="onHeaderDragStart"
+          class="flex items-center justify-center w-6 shrink-0 cursor-grab active:cursor-grabbing self-stretch rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+          title="Drag to reorder"
+        >
+          <UIcon name="i-lucide-grip-vertical" class="w-4 h-4 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors" />
+        </div>
+
         <div 
-          class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl border"
+          class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl border shrink-0"
           :style="{ backgroundColor: `${props.habit.color}15`, borderColor: `${props.habit.color}30`, color: props.habit.color }"
         >
           {{ props.habit.icon }}
         </div>
-        <div>
+        <div class="min-w-0">
           <h3 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" :title="props.habit.title">{{ props.habit.title }}</h3>
           <p class="text-sm text-gray-500 line-clamp-1">{{ props.habit.description || 'No description' }}</p>
         </div>
       </div>
       
       <UPopover :popper="{ placement: 'bottom-end' }">
-        <UButton color="gray" variant="ghost" icon="i-lucide-more-vertical" />
+        <UButton color="gray" variant="ghost" icon="i-lucide-more-vertical" @mousedown.stop />
         <template #content>
           <div class="p-1 min-w-[140px]">
             <UButton 

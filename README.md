@@ -127,19 +127,31 @@ momentum/
 
 ---
 
+
 ## Architecture
 
 ```
-Client (Vue/Nuxt) → H3 Server Routes → Drizzle ORM → Neon Postgres
-                                      → Groq API (AI reflections)
+Client (Vue/Nuxt)
+    ↓
+API Layer (H3)
+    ↓
+MCP DB Tools
+    ↓
+Drizzle ORM
+    ↓
+Neon Postgres
+    ↓
+Groq API (AI reflections)
 ```
 
 **Design decisions:**
+- MCP DB Tools digunakan untuk expose data habit_logs, habits, dan users secara efisien, serta membangun pipeline analisis otomatis ke AI (Groq).
 - No repository layer — Drizzle is lightweight enough to use directly in route handlers.
 - Optimistic UI — state updates instantly, syncs to database in the background, reverts on failure.
 - No real-time sync — intentionally excluded from MVP to keep complexity manageable.
 
 ---
+
 
 ## AI Reflection Engine
 
@@ -147,14 +159,16 @@ The AI feature is not a chatbot. It's a behavioral pattern detector.
 
 **How it works:**
 1. User triggers a reflection from the dashboard.
-2. The server aggregates the last 30 days of habit completion data.
-3. Context is sent to Groq (LLaMA 3) with a system prompt that enforces a calm, analytical tone.
-4. A short, data-driven observation is returned and displayed.
+2. Server mengambil data habit_logs, habits, dan users via MCP DB Tools.
+3. Data dikumpulkan dan dikirim ke Groq (LLaMA 3) dengan prompt khusus untuk insight reflektif.
+4. Insight singkat berbasis data ditampilkan di UI.
 
 **The AI generates:** Short behavioral insights and reflective observations.  
 **The AI does not generate:** Motivational quotes, generic encouragement, or chatbot conversations.
 
 See [AI_STRATEGY.md](./docs/AI_STRATEGY.md) for prompt engineering details.
+
+**Note:** Integrasi MCP DB Tools memudahkan pipeline data untuk analisis AI dan scalable untuk future automation.
 
 ---
 

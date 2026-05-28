@@ -27,6 +27,26 @@ To ensure the project remains robust and scalable yet realistic for an MVP:
 - **Client (Vue/Nuxt) → API Layer (H3) → Drizzle ORM → PostgreSQL**
 - **Optimistic UI Updates:** Drag-and-drop reordering, task completion, and habit creation happen instantly in the UI while syncing to the database in the background to provide a premium, snappy feel.
 
+## 4. Architecture & MCP Integration
+To ensure the project remains robust, scalable, dan siap untuk automasi AI:
+- **Client (Vue/Nuxt) → API Layer (H3) → MCP DB Tools → Drizzle ORM → PostgreSQL**
+- **Optimistic UI Updates:** Drag-and-drop reordering, task completion, and habit creation happen instantly in the UI while syncing to the database in the background to provide a premium, snappy feel.
+
+### Integrasi MCP Tools
+MCP (Model Context Protocol) tools digunakan untuk expose data habit_logs, habits, dan users secara efisien, serta membangun pipeline analisis otomatis:
+
+```
+Client → API Layer → MCP DB Tools → Drizzle ORM → Postgres
+                      ↓
+                    (data)
+                      ↓
+                    Groq AI
+                      ↓
+                    Insight ke UI
+```
+
+MCP memudahkan query, agregasi, dan automasi pipeline analisis, serta scalable untuk future automation dan advanced analytics.
+
 ## 5. Core Features
 1. **Habit & Task Management**: Group tasks into habits, sortable via native drag-and-drop.
 2. **Advanced Heatmap**: GitHub-style contribution graph that visualizes daily completion rates gracefully without horizontal scrolling, aligned precisely using CSS grid columns and filterable by dynamic year selection.
@@ -35,6 +55,17 @@ To ensure the project remains robust and scalable yet realistic for an MVP:
 
 ## 6. AI Insight System Behavior (The Reflection Engine)
 The AI does not preach; it observes.
+- **Analyzes:** Habit completion patterns, streak stability, skipped days, active hours, strongest/weakest habits, and weekly consistency shifts.
+- **Generates:** Short insights, reflective observations, and subtle behavioral suggestions based purely on data.
+- **Examples:**
+  - *"You complete 42% more habits after 7 PM."*
+  - *"Your consistency drops slightly during weekends."*
+  - *"Reading is currently your most stable habit."*
+  - *"Missing one day rarely breaks momentum, but missing two often does."*
+
+## 6. AI Insight System Behavior (The Reflection Engine)
+The AI does not preach; it observes.
+- **Pipeline:** Data habit_logs, habits, dan users diambil via MCP tools, lalu diolah dan dikirim ke Groq (LLaMA 3) untuk menghasilkan insight singkat berbasis data.
 - **Analyzes:** Habit completion patterns, streak stability, skipped days, active hours, strongest/weakest habits, and weekly consistency shifts.
 - **Generates:** Short insights, reflective observations, and subtle behavioral suggestions based purely on data.
 - **Examples:**

@@ -16,6 +16,8 @@ const heatmapData = ref<{date: string, count: number}[]>([])
 const isLoading = ref(true)
 const isAnalyzing = ref(false)
 const currentStreak = useState<number | null>('currentStreak', () => null)
+const isReflectionModalOpen = ref(false)
+const aiReflection = ref('')
 
 // Helper to check if a date string is today
 const isToday = (dateStr: string) => {
@@ -33,21 +35,21 @@ const calculateStreak = (data: { date: string; count: number }[]) => {
   const activeDates = new Set(
     data.filter(d => d.count > 0).map(d => d.date)
   )
-  
+
   let streak = 0
   const checkDate = new Date()
-  
+
   const todayStr = checkDate.toISOString().split('T')[0]
   const yesterday = new Date()
   yesterday.setDate(checkDate.getDate() - 1)
   const yesterdayStr = yesterday.toISOString().split('T')[0]
-  
+
   if (!activeDates.has(todayStr) && !activeDates.has(yesterdayStr)) {
     return 0
   }
-  
+
   let currentCheck = activeDates.has(todayStr) ? checkDate : yesterday
-  
+
   while (true) {
     const dateStr = currentCheck.toISOString().split('T')[0]
     if (activeDates.has(dateStr)) {
@@ -67,14 +69,14 @@ const dragOverHabitIndex = ref<number | null>(null)
 const fetchHabits = async () => {
   try {
     const h = await $fetch<any[]>('/api/habits')
-    
+
     // For each habit, fetch its tasks
     for (const habit of h) {
       habit.tasks = await $fetch(`/api/habits/${habit.id}/tasks`)
     }
-    
+
     habits.value = h
-    
+
     // Calculate heatmap data from completed tasks
     const counts: Record<string, number> = {}
     habits.value.forEach(habit => {
@@ -85,7 +87,7 @@ const fetchHabits = async () => {
         }
       })
     })
-    
+
     heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
     currentStreak.value = calculateStreak(heatmapData.value)
   } catch (error) {
@@ -135,7 +137,7 @@ const toggleTask = async (task: any) => {
   const newCompleted = !task.completed
   task.completed = newCompleted
   task.completedAt = newCompleted ? new Date().toISOString() : null
-  
+
   await $fetch(`/api/habits/tasks/${task.id}`, { method: 'PATCH', body: { completed: newCompleted } })
   fetchHabits()
 }
@@ -163,8 +165,8 @@ const reorderTasks = async (habitId: string, fromIdx: number, toIdx: number) => 
     }))
 
     // Save to DB in background
-    $fetch('/api/habits/tasks/reorder', { 
-      method: 'PATCH', 
+    $fetch('/api/habits/tasks/reorder', {
+      method: 'PATCH',
       body: { tasks: payload }
     }).catch(err => {
       console.error('Failed to reorder tasks:', err)
@@ -207,8 +209,8 @@ const onHabitDrop = (idx: number) => {
     }))
 
     // Save to DB
-    $fetch('/api/habits/reorder', { 
-      method: 'PATCH', 
+    $fetch('/api/habits/reorder', {
+      method: 'PATCH',
       body: { habits: payload }
     }).catch(err => {
       console.error('Failed to reorder habits:', err)
@@ -229,14 +231,35 @@ const analyzeWeek = () => {
   isAnalyzing.value = true
   setTimeout(() => {
     isAnalyzing.value = false
-    toast.add({ 
-      title: 'Pattern Detected', 
-      description: 'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.', 
+    toast.add({
+      title: 'Pattern Detected',
+      description: 'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.',
       color: 'primary',
       icon: 'i-lucide-eye',
       timeout: 8000
     })
   }, 2000)
+}
+
+const openReflectionModal = async () => {
+  isReflectionModalOpen.value = true
+  isAnalyzing.value = true
+  aiReflection.value = ''
+  try {
+    // Simulasi: fetch insight dari endpoint MCP+Groq
+    // Ganti dengan call ke API MCP+Groq jika sudah tersedia
+    await new Promise(r => setTimeout(r, 2200))
+    // Contoh hasil insight
+    aiReflection.value =
+      'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.'
+    // Untuk implementasi nyata, fetch ke endpoint backend yang sudah integrasi MCP+Groq
+    // const result = await $fetch('/api/ai/reflection')
+    // aiReflection.value = result.insight
+  } catch (e) {
+    aiReflection.value = 'Sorry, AI could not analyze your data right now.'
+  } finally {
+    isAnalyzing.value = false
+  }
 }
 
 onMounted(() => {
@@ -263,7 +286,7 @@ onMounted(() => {
     </div>
 
     <div v-else class="space-y-10">
-      
+
       <!-- Header Info -->
       <div class="bg-primary-500/10 border border-primary-500/20 text-primary-700 dark:text-primary-400 px-6 py-4 rounded-3xl flex items-center justify-between">
         <div class="flex items-center gap-3">
@@ -280,10 +303,10 @@ onMounted(() => {
             <UIcon name="i-lucide-layers" class="w-6 h-6 text-primary-500" />
             <span>Your Habits</span>
           </h2>
-          <UButton 
-            color="primary" 
-            variant="solid" 
-            icon="i-lucide-plus" 
+          <UButton
+            color="primary"
+            variant="solid"
+            icon="i-lucide-plus"
             class="rounded-full px-6 shadow-sm"
             size="lg"
             @click="openCreateModal"
@@ -301,21 +324,19 @@ onMounted(() => {
 
         <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div
-            v-for="(habit, idx) in habits" 
+            v-for="(habit, idx) in habits"
             :key="habit.id"
-            draggable="true"
-            @dragstart="onDragHabitStart(idx, $event)"
             @dragover="onDragHabitOver(idx, $event)"
             @dragleave="onDragHabitLeave"
             @drop="onHabitDrop(idx)"
             @dragend="onDragHabitEnd"
-            class="transition-all duration-200 cursor-grab active:cursor-grabbing h-full"
+            class="transition-all duration-200 h-full"
             :class="[
               dragOverHabitIndex === idx ? 'scale-105 opacity-80 shadow-xl ring-2 ring-primary-500 rounded-3xl' : '',
               dragHabitIndex === idx ? 'opacity-40 scale-95' : 'opacity-100'
             ]"
           >
-            <HabitCard 
+            <HabitCard
               :habit="habit"
               :tasks="habit.tasks.filter((t: any) => !t.completed || (t.completedAt && isToday(t.completedAt)))"
               mode="live"
@@ -326,6 +347,7 @@ onMounted(() => {
               @delete-habit="deleteHabit"
               @edit-habit="openEditModal"
               @reorder-tasks="reorderTasks"
+              @drag-habit-start="onDragHabitStart(idx, $event)"
             />
           </div>
         </div>
@@ -380,36 +402,56 @@ onMounted(() => {
           <span>Behavioral Reflections</span>
         </h2>
         <div class="bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-6">
-          <div class="w-12 h-12 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0">
+          <div class="w-12 h-12 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0 animate-pulse">
             <UIcon name="i-lucide-sparkles" class="w-6 h-6" />
           </div>
           <div class="flex-1 text-center md:text-left">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Observe Your Patterns</h3>
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Let AI Reflect on Your Data</h3>
             <p class="text-base text-gray-500 dark:text-gray-400 max-w-2xl">
-              See which habits stabilize your routine, when your consistency peaks, and where momentum tends to break.
+              Curious what your habits say about you? Let our AI analyze your last 30 days and generate a unique insight just for you. Click below and watch the magic happen!
             </p>
           </div>
-          <UButton 
-            color="white" 
-            variant="solid" 
-            size="lg" 
+          <UButton
+            color="white"
+            variant="solid"
+            size="lg"
             class="rounded-xl px-6 font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border border-gray-200 dark:border-white/10 shrink-0"
             :loading="isAnalyzing"
-            @click="analyzeWeek"
+            @click="openReflectionModal"
           >
             Reflect on Data
           </UButton>
         </div>
+        <UModal v-model="isReflectionModalOpen" :overlay="true" :transition="'fade'">
+          <div class="p-8 flex flex-col items-center gap-4 min-w-[320px] max-w-[90vw]">
+            <div v-if="isAnalyzing" class="flex flex-col items-center gap-2 animate-pulse">
+              <UIcon name="i-lucide-brain-circuit" class="w-12 h-12 text-primary-500 animate-spin" />
+              <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">Analyzing your patterns...</span>
+              <span class="text-gray-500 dark:text-gray-400 text-sm">Letting the AI reflect on your last 30 days of habits.</span>
+            </div>
+            <div v-else class="flex flex-col items-center gap-2">
+              <UIcon name="i-lucide-sparkles" class="w-10 h-10 text-primary-500" />
+              <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">Your AI Reflection</span>
+              <p class="text-base text-gray-700 dark:text-gray-200 text-center max-w-md">{{ aiReflection }}</p>
+              <UButton color="primary" class="mt-4" @click="isReflectionModalOpen = false">Close</UButton>
+            </div>
+          </div>
+        </UModal>
       </div>
 
     </div>
 
     <!-- Modals -->
-    <HabitCreateModal 
-      v-model="isCreateModalOpen" 
+    <HabitCreateModal
+      v-model="isCreateModalOpen"
       :mode="modalMode"
       :initial-data="editingHabit"
-      @submit="submitHabit" 
+      @submit="submitHabit"
+    />
+    <ReflectionModal
+      v-model="isReflectionModalOpen"
+      :ai-reflection="aiReflection"
+      @close="isReflectionModalOpen = false"
     />
   </div>
 </template>
