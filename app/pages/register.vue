@@ -22,7 +22,7 @@ const handleRegister = async () => {
     if (authError) {
       error.value = authError.message || 'Registration failed'
     } else {
-      navigateTo('/dashboard')
+      window.location.href = "/dashboard";
     }
   } catch (e: any) {
     error.value = e.message || 'Something went wrong'
