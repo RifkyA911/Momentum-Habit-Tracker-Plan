@@ -18,6 +18,12 @@ const isAnalyzing = ref(false)
 const currentStreak = useState<number | null>('currentStreak', () => null)
 const isReflectionModalOpen = ref(false)
 const aiReflection = ref('')
+const stats = ref({
+  bestStreak: 0,
+  completionRate: 0,
+  mostConsistent: 'N/A',
+  peakTime: 'N/A'
+})
 
 // Helper to check if a date string is today
 const isToday = (dateStr: string) => {
@@ -241,6 +247,15 @@ const analyzeWeek = () => {
   }, 2000)
 }
 
+const fetchStats = async () => {
+  try {
+    const data = await $fetch('/api/stats')
+    stats.value = data
+  } catch (e) {
+    console.error('Failed to fetch stats:', e)
+  }
+}
+
 const openReflectionModal = async () => {
   isReflectionModalOpen.value = true
   isAnalyzing.value = true
@@ -320,6 +335,7 @@ const openReflectionModal = async () => {
 
 onMounted(() => {
   fetchHabits()
+  fetchStats()
 })
 </script>
 
@@ -418,19 +434,19 @@ onMounted(() => {
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Best Streak</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">12 days</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.bestStreak }} days</span>
           </div>
           <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Completion Rate</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">84%</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.completionRate }}%</span>
           </div>
           <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Most Consistent</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">Reading</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.mostConsistent }}</span>
           </div>
           <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
             <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Peak Time</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">8 PM</span>
+            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.peakTime }}</span>
           </div>
         </div>
       </div>
@@ -457,41 +473,147 @@ onMounted(() => {
           <UIcon name="i-lucide-brain-circuit" class="w-6 h-6 text-primary-500" />
           <span>Behavioral Reflections</span>
         </h2>
-        <div class="bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-center gap-6">
-          <div class="w-12 h-12 rounded-full bg-primary-500/10 text-primary-500 flex items-center justify-center shrink-0 animate-pulse">
-            <UIcon name="i-lucide-sparkles" class="w-6 h-6" />
+        
+        <!-- Main Card -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 p-[1px]">
+          <div class="relative bg-white dark:bg-gray-900 rounded-3xl p-8 md:p-10">
+            <!-- Animated Background Elements -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-primary-500/10 rounded-full blur-3xl animate-pulse" />
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+            
+            <div class="relative flex flex-col lg:flex-row items-center gap-8">
+              <!-- Left: Icon & Text -->
+              <div class="flex-1 text-center lg:text-left">
+                <div class="flex items-center justify-center lg:justify-start gap-4 mb-4">
+                  <div class="relative">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary-500/25 animate-bounce">
+                      <UIcon name="i-lucide-sparkles" class="w-8 h-8 text-white" />
+                    </div>
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full animate-ping" />
+                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full" />
+                  </div>
+                  <div>
+                    <h3 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+                      AI-Powered Insights
+                    </h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                      Powered by Groq AI
+                    </p>
+                  </div>
+                </div>
+                <p class="text-gray-600 dark:text-gray-300 text-base leading-relaxed max-w-xl">
+                  Discover hidden patterns in your habits. Our AI analyzes your last 30 days of activity to deliver personalized, data-driven reflections that help you understand your behavior better.
+                </p>
+                
+                <!-- Feature Pills -->
+                <div class="flex flex-wrap gap-2 mt-4 justify-center lg:justify-start">
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 dark:bg-primary-500/10 rounded-full">
+                    <UIcon name="i-lucide-clock" class="w-4 h-4 text-primary-500" />
+                    <span class="text-xs font-medium text-primary-600 dark:text-primary-400">Time Patterns</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 dark:bg-purple-500/10 rounded-full">
+                    <UIcon name="i-lucide-calendar" class="w-4 h-4 text-purple-500" />
+                    <span class="text-xs font-medium text-purple-600 dark:text-purple-400">Day Analysis</span>
+                  </div>
+                  <div class="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 dark:bg-pink-500/10 rounded-full">
+                    <UIcon name="i-lucide-trending-up" class="w-4 h-4 text-pink-500" />
+                    <span class="text-xs font-medium text-pink-600 dark:text-pink-400">Trend Detection</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Right: CTA Button -->
+              <div class="shrink-0">
+                <UButton
+                  color="primary"
+                  variant="solid"
+                  size="xl"
+                  class="rounded-2xl px-8 py-4 font-bold text-lg shadow-xl shadow-primary-500/25 hover:shadow-2xl hover:shadow-primary-500/40 transition-all duration-300 hover:scale-105 group"
+                  :loading="isAnalyzing"
+                  @click="openReflectionModal"
+                >
+                  <template #leading>
+                    <UIcon name="i-lucide-wand-2" class="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                  </template>
+                  Generate Insight
+                </UButton>
+              </div>
+            </div>
           </div>
-          <div class="flex-1 text-center md:text-left">
-            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Let AI Reflect on Your Data</h3>
-            <p class="text-base text-gray-500 dark:text-gray-400 max-w-2xl">
-              Curious what your habits say about you? Let our AI analyze your last 30 days and generate a unique insight just for you. Click below and watch the magic happen!
-            </p>
-          </div>
-          <UButton
-            color="white"
-            variant="solid"
-            size="lg"
-            class="rounded-xl px-6 font-medium shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition-colors border border-gray-200 dark:border-white/10 shrink-0"
-            :loading="isAnalyzing"
-            @click="openReflectionModal"
-          >
-            Reflect on Data
-          </UButton>
         </div>
-        <UModal v-model="isReflectionModalOpen" :overlay="true" :transition="'fade'">
-          <div class="p-8 flex flex-col items-center gap-4 min-w-[320px] max-w-[90vw]">
-            <div v-if="isAnalyzing" class="flex flex-col items-center gap-2 animate-pulse">
-              <UIcon name="i-lucide-brain-circuit" class="w-12 h-12 text-primary-500 animate-spin" />
-              <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">Analyzing your patterns...</span>
-              <span class="text-gray-500 dark:text-gray-400 text-sm">Letting the AI reflect on your last 30 days of habits.</span>
+        
+        <!-- Modal -->
+        <UModal 
+          v-model="isReflectionModalOpen" 
+          :ui="{ 
+            container: 'flex items-center justify-center',
+            background: 'bg-black/50 backdrop-blur-sm'
+          }"
+        >
+          <UCard class="relative bg-white mx-auto dark:bg-gray-900 rounded-3xl shadow-2xl max-w-2xl w-full border-0">
+            <!-- Close Button -->
+            <UButton
+              icon="i-lucide-x"
+              color="gray"
+              variant="ghost"
+              size="lg"
+              class="absolute top-4 right-4 z-10"
+              @click="isReflectionModalOpen = false"
+            />
+            
+            <!-- Content -->
+            <div class="p-8 md:p-10">
+              <!-- Loading State -->
+              <div v-if="isAnalyzing" class="flex flex-col items-center gap-6 py-8">
+                <div class="relative">
+                  <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center animate-pulse">
+                    <UIcon name="i-lucide-brain-circuit" class="w-12 h-12 text-white animate-spin" />
+                  </div>
+                  <div class="absolute inset-0 rounded-full border-4 border-primary-500/20 animate-ping" />
+                </div>
+                <div class="text-center space-y-2">
+                  <h3 class="text-2xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
+                    Analyzing Your Patterns
+                  </h3>
+                  <p class="text-gray-500 dark:text-gray-400">
+                    Our AI is examining your last 30 days of habit data...
+                  </p>
+                </div>
+                <!-- Progress Dots -->
+                <div class="flex gap-2">
+                  <div class="w-3 h-3 rounded-full bg-primary-500 animate-bounce" />
+                  <div class="w-3 h-3 rounded-full bg-purple-500 animate-bounce delay-100" />
+                  <div class="w-3 h-3 rounded-full bg-pink-500 animate-bounce delay-200" />
+                </div>
+              </div>
+              
+              <!-- Result State -->
+              <div v-else class="flex flex-col items-center gap-6 py-4">
+                <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/25 animate-bounce">
+                  <UIcon name="i-lucide-sparkles" class="w-10 h-10 text-white" />
+                </div>
+                <div class="text-center space-y-4 w-full">
+                  <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Your AI Reflection
+                  </h3>
+                  <div class="bg-gradient-to-br from-primary-50 to-purple-50 dark:from-primary-500/10 dark:to-purple-500/10 rounded-2xl p-6 border border-primary-100 dark:border-primary-500/20">
+                    <p class="text-lg text-gray-700 dark:text-gray-200 leading-relaxed">
+                      {{ aiReflection }}
+                    </p>
+                  </div>
+                  <UButton
+                    color="primary"
+                    variant="solid"
+                    size="lg"
+                    class="rounded-xl px-8 font-semibold"
+                    @click="isReflectionModalOpen = false"
+                  >
+                    Got It
+                  </UButton>
+                </div>
+              </div>
             </div>
-            <div v-else class="flex flex-col items-center gap-2">
-              <UIcon name="i-lucide-sparkles" class="w-10 h-10 text-primary-500" />
-              <span class="text-lg font-semibold text-primary-600 dark:text-primary-400">Your AI Reflection</span>
-              <p class="text-base text-gray-700 dark:text-gray-200 text-center max-w-md">{{ aiReflection }}</p>
-              <UButton color="primary" class="mt-4" @click="isReflectionModalOpen = false">Close</UButton>
-            </div>
-          </div>
+          </UCard>
         </UModal>
       </div>
 
