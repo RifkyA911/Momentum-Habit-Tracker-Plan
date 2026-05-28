@@ -90,6 +90,7 @@ bun install
 Ensure `.env` contains:
 ```env
 DATABASE_URL=postgres://...
+GROQ_API_KEY=gsk_...
 ```
 
 ### 3. Claude Desktop Configuration
@@ -114,6 +115,58 @@ The MCP configuration is in `.claude/mcp_config.json`:
 bun run mcp:server
 ```
 
+## Integration with Groq AI
+
+The MCP tools work alongside the Groq AI integration in `server/api/groq.post.ts`. The AI integration:
+
+1. **Behavioral Reflections**: The dashboard's "Behavioral Reflections" section uses Groq AI (LLaMA 3.1 8B Instant model) to generate personalized insights based on user habit data
+2. **Data Analysis**: The AI analyzes the last 30 days of habit completion data, including:
+   - Total habits and completions
+   - Habit-specific completion breakdown
+   - Time of day patterns (morning, afternoon, evening)
+   - Day of week patterns
+3. **UI Integration**: The insights are displayed in a beautiful, animated modal on the dashboard
+
+### Current Implementation
+- **API Endpoint**: `/api/groq` handles both behavioral reflection requests and general chat
+- **Model**: Uses `llama-3.1-8b-instant` (replaced deprecated `llama3-8b-8192`)
+- **Dashboard Integration**: The Behavioral Reflections section features:
+  - Gradient border card with animated background elements
+  - Bouncing icon with ping animation
+  - Feature pills showing Time Patterns, Day Analysis, Trend Detection
+  - Enhanced CTA button with hover effects
+  - Redesigned modal with backdrop blur and loading animations
+
+## Database Seeding
+
+The project includes a comprehensive seeding script (`server/db/seed.ts`) that generates realistic test data:
+
+### Seeding Features
+- **1 Year of Data**: Generates 365 days of historical habit data
+- **4 Streak Gaps**: Intentionally creates 4 periods of no completions to simulate real-life breaks
+- **5 Habits**: Morning Workout, Read Books, Mindful Meditation, Write Journal, Code Projects
+- **~1,662 Tasks**: Total tasks across all habits with realistic completion patterns
+
+### Running the Seed
+```bash
+bunx tsx server/db/seed.ts
+```
+
+## Stats Integration
+
+The dashboard's "Momentum Stats" section is now fully integrated with the database via `/api/stats` endpoint:
+
+### Available Stats
+- **Best Streak**: Longest consecutive days with completions
+- **Completion Rate**: Percentage of tasks completed in the last 30 days
+- **Most Consistent**: Habit with the highest completion count
+- **Peak Time**: Most common hour for task completions
+
+### Implementation
+- **API Endpoint**: `/api/stats` calculates real-time statistics from the database
+- **User Handling**: Currently uses the first user from database (seeded data) for testing
+- **Date Handling**: Properly handles PostgreSQL timestamp comparisons using ISO format
+
 ## Usage in AI Integration
 
 ### Example: Generating Behavioral Insights
@@ -132,15 +185,6 @@ Analyze the user's habit completion patterns using the MCP tools:
 3. Identify patterns in completion times
 4. Generate 2-3 reflective observations about their consistency
 ```
-
-## Integration with Groq AI
-
-The MCP tools are designed to work seamlessly with the Groq AI integration in `server/api/groq.post.ts`. The AI can:
-
-1. Query database via MCP tools
-2. Aggregate and analyze the data
-3. Generate behavioral insights
-4. Return insights to the UI
 
 ## Testing
 

@@ -175,14 +175,53 @@ See [AI_STRATEGY.md](./docs/AI_STRATEGY.md) for prompt engineering details.
 ## Scripts
 
 ```bash
-bun dev           # Development server
-bun run build     # Production build
-bun run preview   # Preview production build
-bun run lint      # ESLint
-bun run typecheck # TypeScript checking
-bunx drizzle-kit push    # Push schema to database
-bunx drizzle-kit studio  # Open Drizzle Studio
+bun dev              # Development server
+bun run build        # Production build
+bun run preview      # Preview production build
+bun run lint         # ESLint
+bun run typecheck    # TypeScript checking
+bun run mcp:server   # Run MCP server for AI integration
+bunx tsx server/db/seed.ts  # Seed database with test data (1 year, 4 streak gaps)
+bunx drizzle-kit push       # Push schema to database
+bunx drizzle-kit studio     # Open Drizzle Studio
 ```
+
+### Database Seeding
+
+The project includes a comprehensive seeding script that generates realistic test data:
+
+```bash
+bunx tsx server/db/seed.ts
+```
+
+**Seeding Features:**
+- **1 Year of Data**: Generates 365 days of historical habit data
+- **4 Streak Gaps**: Intentionally creates 4 periods of no completions to simulate real-life breaks
+- **5 Habits**: Morning Workout, Read Books, Mindful Meditation, Write Journal, Code Projects
+- **~1,662 Tasks**: Total tasks across all habits with realistic completion patterns
+
+---
+
+## MCP Integration
+
+Momentum uses MCP (Model Context Protocol) to expose database tools for AI integration. This enables AI systems (like Claude Desktop) to directly query the database for behavioral pattern analysis.
+
+**Available MCP Tools:**
+- `get_user_profile` - Get user profile data
+- `get_user_habits` - Get all habits for a user
+- `get_habit_tasks` - Get tasks for a specific habit
+- `get_completed_tasks_by_date` - Get completed tasks within a date range
+- `get_habit_completion_stats` - Get completion statistics
+- `get_user_activity_heatmap` - Get daily completion counts for heatmap
+
+**Setup:**
+```bash
+# MCP server is configured in .claude/mcp_config.json
+# Run with:
+bun run mcp:server
+```
+
+See [`.docs/MCP_INTEGRATION.md`](./.docs/MCP_INTEGRATION.md) for detailed documentation.
 
 ---
 
