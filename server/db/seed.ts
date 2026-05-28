@@ -25,8 +25,8 @@ async function main() {
     const newUserId = faker.string.uuid()
     const inserted = await db.insert(schema.user).values({
       id: newUserId,
-      name: faker.person.fullName(),
-      email: faker.internet.email(),
+      name: 'Test User',
+      email: 'test@example.com',
       emailVerified: true,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -34,15 +34,18 @@ async function main() {
     testUser = inserted[0]
   }
 
-  console.log(`Using user: ${testUser.name} (${testUser.id})`)
+  console.log(`Using user: ${testUser?.name} (${testUser?.id})`)
+  
+  // Store the user ID for later use
+  console.log(`USER_ID=${testUser?.id}`)
 
   // Clear existing habits and tasks to make it fresh & consistent
   console.log("Cleaning old habits and tasks...")
-  const userHabits = await db.select({ id: schema.habit.id }).from(schema.habit).where(eq(schema.habit.userId, testUser.id))
+  const userHabits = await db.select({ id: schema.habit.id }).from(schema.habit).where(eq(schema.habit.userId, testUser!.id))
   for (const h of userHabits) {
     await db.delete(schema.habitTask).where(eq(schema.habitTask.habitId, h.id))
   }
-  await db.delete(schema.habit).where(eq(schema.habit.userId, testUser.id))
+  await db.delete(schema.habit).where(eq(schema.habit.userId, testUser!.id))
 
   // 2. Create realistic habits
   const habitsToCreate = [
@@ -59,11 +62,11 @@ async function main() {
     const habitId = faker.string.uuid()
     const inserted = await db.insert(schema.habit).values({
       id: habitId,
-      userId: testUser.id,
-      title: h.title,
-      icon: h.icon,
-      color: h.color,
-      description: h.description,
+      userId: testUser!.id,
+      title: h!.title,
+      icon: h!.icon,
+      color: h!.color,
+      description: h!.description,
       orderIndex: i,
       createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
     }).returning()
@@ -72,15 +75,32 @@ async function main() {
 
   console.log(`Created ${insertedHabits.length} habits.`)
 
-  // 3. Generate completed tasks for the last 60 days to fill the heatmap
+  // 3. Generate completed tasks for the last 365 days to fill the heatmap
   console.log("Generating historical completed tasks...")
   const today = new Date()
   let taskCount = 0
 
-  for (let dayOffset = 60; dayOffset >= 1; dayOffset--) {
+  // Define 4 streak gap periods (bolong-bolong streak)
+  // Each gap is 5-7 days of no completions
+  const streakGaps = [
+    { start: 45, end: 50 },   // Gap 1: days 45-50 ago
+    { start: 90, end: 96 },   // Gap 2: days 90-96 ago
+    { start: 180, end: 187 },  // Gap 3: days 180-187 ago
+    { start: 270, end: 278 }   // Gap 4: days 270-278 ago
+  ]
+
+  for (let dayOffset = 365; dayOffset >= 1; dayOffset--) {
     const targetDate = new Date()
     targetDate.setDate(today.getDate() - dayOffset)
     const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6
+    
+    // Check if this day is in a streak gap
+    const isInGap = streakGaps.some(gap => dayOffset >= gap.start && dayOffset <= gap.end)
+    
+    if (isInGap) {
+      // Skip completions during streak gaps
+      continue
+    }
     
     // Choose how many habits are completed on this day (weekdays have higher rate)
     const completionChance = isWeekend ? 0.4 : 0.75
@@ -93,8 +113,8 @@ async function main() {
           const taskId = faker.string.uuid()
           await db.insert(schema.habitTask).values({
             id: taskId,
-            habitId: habit.id,
-            text: `Completed session of ${habit.title}`,
+            habitId: habit!.id,
+            text: `Completed session of ${habit!.title}`,
             completed: true,
             completedAt: new Date(targetDate),
             orderIndex: t,
@@ -120,13 +140,15 @@ async function main() {
     const habit = insertedHabits[i]
     const options = taskOptions[i]
     
+    if (!habit || !options) continue
+    
     for (let t = 0; t < options.length; t++) {
       const taskId = faker.string.uuid()
       const isDone = Math.random() > 0.4
       await db.insert(schema.habitTask).values({
-        id: taskId,
-        habitId: habit.id,
-        text: options[t],
+        id: taskId as any,
+        habitId: habit.id as any,
+        text: options[t] as any,
         completed: isDone,
         completedAt: isDone ? new Date() : null,
         orderIndex: t,
