@@ -15,16 +15,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // For now, use the first user from database (seeded data) for testing
-  const firstUser = await db.query.user.findFirst()
-  if (!firstUser) {
-    throw createError({
-      statusCode: 500,
-      message: 'No users found in database'
-    })
-  }
-
-  const effectiveUserId = firstUser.id
+  const effectiveUserId = session.user.id
 
   console.log('Using user ID:', effectiveUserId)
 
