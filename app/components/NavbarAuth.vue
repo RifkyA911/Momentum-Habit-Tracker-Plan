@@ -13,17 +13,17 @@ const handleSignOut = async () => {
 
 const userMenuItems = computed(() => [
   [{
-    label: 'Akun',
+    label: 'Account',
     icon: 'i-lucide-user',
     to: '/dashboard/account'
   },
   {
-    label: 'Pengaturan',
+    label: 'Settings',
     icon: 'i-lucide-settings',
     to: '/dashboard/settings'
   }],
   [{
-    label: 'Keluar',
+    label: 'Sign Out',
     icon: 'i-lucide-log-out',
     onSelect: handleSignOut,
     click: handleSignOut
