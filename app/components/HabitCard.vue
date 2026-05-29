@@ -45,7 +45,11 @@ const onDragLeave = () => {
 
 const onDrop = (idx: number) => {
   if (dragIndex.value !== null && dragIndex.value !== idx) {
-    emit('reorderTasks', props.habit.id, dragIndex.value, idx)
+    const draggedTask = props.tasks[dragIndex.value]
+    const targetTask = props.tasks[idx]
+    if (draggedTask && targetTask) {
+      emit('reorderTasks', props.habit.id, draggedTask.id, targetTask.id)
+    }
   }
   dragIndex.value = null
   dragOverIndex.value = null
@@ -142,7 +146,7 @@ const onHeaderDragStart = (e: DragEvent) => {
         @dragleave="onDragLeave"
         @drop="onDrop(idx)"
         @dragend="onDragEnd"
-        class="group flex items-start gap-2.5 py-1.5 px-2 rounded-xl transition-all cursor-default"
+        class="group flex items-center gap-2.5 py-1.5 px-2 rounded-xl transition-all cursor-default"
         :class="[
           dragOverIndex === idx ? 'bg-primary-50 dark:bg-primary-900/20 border-t-2 border-primary-400' : 'hover:bg-gray-50 dark:hover:bg-white/5',
           dragIndex === idx ? 'opacity-40' : 'opacity-100'
