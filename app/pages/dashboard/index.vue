@@ -11,6 +11,9 @@ const { data: session } = await useFetch('/api/auth/get-session', {
 const isCreateModalOpen = ref(false)
 const modalMode = ref<'create' | 'edit'>('create')
 const editingHabit = ref<any>(null)
+const isSubmittingHabit = ref(false)
+const isCreatingHabit = ref(false)
+const newlyCreatedHabitId = ref<string | null>(null)
 const habits = ref<any[]>([])
 const heatmapData = ref<{date: string, count: number}[]>([])
 const isLoading = ref(true)
@@ -116,14 +119,35 @@ const openEditModal = (habit: any) => {
 }
 
 const submitHabit = async (data: any) => {
+  // Close instantly for snappy feel
+  isCreateModalOpen.value = false 
+
   if (modalMode.value === 'create') {
-    await $fetch('/api/habits', { method: 'POST', body: data })
-    toast.add({ title: 'Habit created', description: `${data.icon} ${data.title} added successfully.`, color: 'green' })
+    isCreatingHabit.value = true
+    try {
+      const created = await $fetch<any>('/api/habits', { method: 'POST', body: data })
+      await fetchHabits()
+      if (created?.id) {
+        newlyCreatedHabitId.value = created.id
+        setTimeout(() => { newlyCreatedHabitId.value = null }, 1200)
+      }
+      toast.add({ title: 'Habit created! 🎉', description: `${data.icon} ${data.title} added successfully.`, color: 'green' })
+    } catch (error: any) {
+      console.error('Failed to submit habit:', error)
+      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'red' })
+    } finally {
+      isCreatingHabit.value = false
+    }
   } else {
-    await $fetch(`/api/habits/${data.id}`, { method: 'PATCH', body: data })
-    toast.add({ title: 'Habit updated', description: 'Changes saved successfully.', color: 'green' })
+    try {
+      await $fetch(`/api/habits/${data.id}`, { method: 'PATCH', body: data })
+      await fetchHabits()
+      toast.add({ title: 'Habit updated ✨', description: 'Changes saved successfully.', color: 'green' })
+    } catch (error: any) {
+      console.error('Failed to submit habit:', error)
+      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'red' })
+    }
   }
-  fetchHabits()
 }
 
 const deleteHabit = async (id: string) => {
@@ -156,9 +180,14 @@ const deleteTask = async (taskId: string) => {
   fetchHabits()
 }
 
-const reorderTasks = async (habitId: string, fromIdx: number, toIdx: number) => {
+const reorderTasks = async (habitId: string, fromTaskId: string, toTaskId: string) => {
   const habit = habits.value.find(h => h.id === habitId)
   if (habit) {
+    const fromIdx = habit.tasks.findIndex((t: any) => t.id === fromTaskId)
+    const toIdx = habit.tasks.findIndex((t: any) => t.id === toTaskId)
+
+    if (fromIdx === -1 || toIdx === -1) return
+
     const tasks = [...habit.tasks]
     const [moved] = tasks.splice(fromIdx, 1)
     tasks.splice(toIdx, 0, moved)
@@ -192,6 +221,7 @@ const onDragHabitStart = (idx: number, e: DragEvent) => {
 }
 
 const onDragHabitOver = (idx: number, e: DragEvent) => {
+  if (dragHabitIndex.value === null) return
   e.preventDefault()
   dragOverHabitIndex.value = idx
 }
@@ -201,7 +231,8 @@ const onDragHabitLeave = () => {
 }
 
 const onHabitDrop = (idx: number) => {
-  if (dragHabitIndex.value !== null && dragHabitIndex.value !== idx) {
+  if (dragHabitIndex.value === null) return
+  if (dragHabitIndex.value !== idx) {
     const fromIdx = dragHabitIndex.value
     const h = [...habits.value]
     const [moved] = h.splice(fromIdx, 1)
@@ -231,6 +262,41 @@ const onHabitDrop = (idx: number) => {
 const onDragHabitEnd = () => {
   dragHabitIndex.value = null
   dragOverHabitIndex.value = null
+}
+
+const tasksCompletedToday = computed(() => {
+  let count = 0
+  habits.value.forEach(habit => {
+    habit.tasks.forEach((task: any) => {
+      if (task.completed && task.completedAt && isToday(task.completedAt)) {
+        count++
+      }
+    })
+  })
+  return count
+})
+
+const isGeneratingSuggestion = ref(false)
+const dailySuggestion = ref('')
+
+const fetchDailySuggestion = async () => {
+  if (isGeneratingSuggestion.value) return
+  isGeneratingSuggestion.value = true
+  dailySuggestion.value = ''
+  try {
+    const response = await $fetch<any>('/api/groq', {
+      method: 'POST',
+      body: { 
+        message: `I have completed ${tasksCompletedToday.value} habit tasks today. Give me ONE short, punchy, and engaging daily motivational tip based on this exact number. Be specific. Maximum 2 sentences. Do not use hashtags.`
+      }
+    })
+    dailySuggestion.value = response.reply || 'No response from AI.'
+  } catch (e) {
+    console.error('Failed to get suggestion:', e)
+    dailySuggestion.value = 'Oops, AI is taking a quick nap. Try again later!'
+  } finally {
+    isGeneratingSuggestion.value = false
+  }
 }
 
 const analyzeWeek = () => {
@@ -341,14 +407,14 @@ onMounted(() => {
 
 <template>
   <div class="space-y-8 pb-10">
-    <header>
+    <header class="animate-fade-up stagger-1">
       <h1 class="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
         Hey {{ session?.user?.name?.split(' ')[0] || 'there' }}, ready to build momentum? 🔥
       </h1>
       <p class="text-gray-500 dark:text-gray-400">Track your habits, stay consistent, and let AI guide you.</p>
     </header>
 
-    <div v-if="isLoading" class="space-y-10">
+    <div v-if="isLoading" class="space-y-10 animate-fade-up stagger-2">
       <USkeleton class="h-16 w-full rounded-3xl" />
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <USkeleton class="h-[300px] w-full rounded-3xl" />
@@ -359,17 +425,115 @@ onMounted(() => {
 
     <div v-else class="space-y-10">
 
-      <!-- Header Info -->
-      <div class="bg-primary-500/10 border border-primary-500/20 text-primary-700 dark:text-primary-400 px-6 py-4 rounded-3xl flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <UIcon name="i-lucide-check-circle-2" class="w-6 h-6" />
-          <span class="font-medium text-lg">You have completed {{ heatmapData.length > 0 ? heatmapData[heatmapData.length-1].count : 0 }} tasks today!</span>
+      <!-- Header Info & AI Suggestion -->
+      <div class="animate-fade-up stagger-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Daily Progress Banner -->
+        <div class="md:col-span-2 relative overflow-hidden bg-gradient-to-br from-primary-600 to-purple-600 rounded-[32px] p-8 sm:p-10 text-white shadow-xl shadow-primary-500/20 flex flex-col justify-center">
+          <!-- Animated Background Elements -->
+          <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="absolute bottom-0 left-10 w-48 h-48 bg-black/10 rounded-full blur-3xl pointer-events-none"></div>
+          
+          <div class="relative z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-md mb-6 border border-white/20 shadow-sm">
+              <UIcon name="i-lucide-activity" class="w-4 h-4 text-white" />
+              <span class="text-xs font-bold uppercase tracking-wider text-white">Today's Progress</span>
+            </div>
+            
+            <h2 class="text-3xl sm:text-4xl font-extrabold mb-3 tracking-tight text-white">
+              <template v-if="tasksCompletedToday === 0">Ready to start?</template>
+              <template v-else-if="tasksCompletedToday <= 2">Good start! 👍</template>
+              <template v-else-if="tasksCompletedToday <= 4">Great momentum! 🚀</template>
+              <template v-else>Unstoppable! 🔥</template>
+            </h2>
+            
+            <p class="text-primary-100 text-lg max-w-lg mb-8 opacity-90 leading-relaxed">
+              <template v-if="tasksCompletedToday === 0">You haven't completed any tasks yet. Pick an easy one to get the ball rolling.</template>
+              <template v-else-if="tasksCompletedToday <= 2">You've completed {{ tasksCompletedToday }} tasks today. Keep the chain going!</template>
+              <template v-else-if="tasksCompletedToday <= 4">You're on fire with {{ tasksCompletedToday }} tasks done. Consistency is the key to mastery.</template>
+              <template v-else>You've crushed {{ tasksCompletedToday }} tasks today! Take a moment to celebrate your discipline.</template>
+            </p>
+            
+            <div class="flex items-center gap-3">
+              <div class="flex -space-x-3">
+                <div v-for="i in Math.min(tasksCompletedToday, 5)" :key="i" class="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border-2 border-primary-500 flex items-center justify-center animate-bounce shadow-md" :style="{ animationDelay: `${i * 100}ms` }">
+                  <UIcon name="i-lucide-check" class="w-5 h-5 text-white drop-shadow-sm" />
+                </div>
+                <div v-if="tasksCompletedToday === 0" class="w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm border-2 border-white/20 flex items-center justify-center border-dashed">
+                  <UIcon name="i-lucide-hourglass" class="w-4 h-4 text-white/50" />
+                </div>
+              </div>
+              <span v-if="tasksCompletedToday > 5" class="text-sm font-bold bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">+{{ tasksCompletedToday - 5 }} more</span>
+            </div>
+          </div>
         </div>
-        <span class="text-sm font-medium opacity-80">Keep the momentum going 🔥</span>
+
+        <!-- Groq AI Daily Suggestion -->
+        <div class="md:col-span-1 bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/5 rounded-[32px] p-6 shadow-sm hover:shadow-xl hover:shadow-primary-500/5 transition-all duration-300 flex flex-col h-full relative overflow-hidden group">
+          <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity pointer-events-none">
+            <UIcon name="i-lucide-bot" class="w-32 h-32 text-primary-500 -mt-6 -mr-6 rotate-12" />
+          </div>
+          
+          <div class="flex items-center gap-3 mb-6 relative z-10">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary-500/30 group-hover:scale-110 transition-transform duration-300">
+              <UIcon name="i-lucide-sparkles" class="w-6 h-6 text-white animate-pulse" />
+            </div>
+            <div>
+              <h3 class="font-bold text-gray-900 dark:text-white text-lg">AI Assistant</h3>
+              <p class="text-xs font-medium text-primary-500 uppercase tracking-widest">Powered by Groq</p>
+            </div>
+          </div>
+          
+          <div class="flex-1 flex flex-col justify-center relative z-10">
+            <template v-if="!dailySuggestion && !isGeneratingSuggestion">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-6 text-center leading-relaxed">
+                Need a quick boost or advice based on your progress today?
+              </p>
+              <UButton 
+                color="black" 
+                variant="solid" 
+                size="lg"
+                class="w-full justify-center rounded-xl py-3 group-hover:-translate-y-1 transition-transform shadow-md"
+                @click="fetchDailySuggestion"
+              >
+                Ask for a Tip
+              </UButton>
+            </template>
+            
+            <template v-else-if="isGeneratingSuggestion">
+              <div class="flex flex-col items-center justify-center py-6 space-y-4">
+                <div class="relative">
+                  <div class="w-12 h-12 rounded-full bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center">
+                    <UIcon name="i-lucide-loader-2" class="w-6 h-6 text-primary-500 animate-spin" />
+                  </div>
+                  <div class="absolute inset-0 rounded-full border-2 border-primary-500/40 animate-ping"></div>
+                </div>
+                <span class="text-xs font-semibold text-primary-500 animate-pulse uppercase tracking-widest">Thinking...</span>
+              </div>
+            </template>
+            
+            <template v-else>
+              <div class="bg-primary-50 dark:bg-primary-500/10 border border-primary-100 dark:border-primary-500/20 rounded-2xl p-5 mb-4 shadow-inner">
+                <p class="text-sm text-gray-800 dark:text-gray-200 leading-relaxed font-medium italic text-center">
+                  "{{ dailySuggestion }}"
+                </p>
+              </div>
+              <UButton 
+                color="gray" 
+                variant="ghost" 
+                size="sm"
+                icon="i-lucide-refresh-cw"
+                class="w-full justify-center rounded-xl hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+                @click="fetchDailySuggestion"
+              >
+                Get another one
+              </UButton>
+            </template>
+          </div>
+        </div>
       </div>
 
       <!-- Section: Your Habits -->
-      <div class="space-y-6">
+      <div class="animate-fade-up stagger-3 space-y-6">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-2xl font-bold flex items-center gap-2">
             <UIcon name="i-lucide-layers" class="w-6 h-6 text-primary-500" />
@@ -387,7 +551,7 @@ onMounted(() => {
           </UButton>
         </div>
 
-        <div v-if="habits.length === 0" class="py-20 text-center border-2 border-dashed border-gray-200 dark:border-white/10 rounded-3xl bg-white/50 dark:bg-white/[0.01]">
+        <div v-if="habits.length === 0 && !isCreatingHabit" class="py-20 text-center border-2 border-dashed border-gray-200 dark:border-white/10 rounded-3xl bg-white/50 dark:bg-white/[0.01]">
           <UIcon name="i-lucide-folder-plus" class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
           <h3 class="text-xl font-bold mb-2">No habits yet</h3>
           <p class="text-gray-500 dark:text-gray-400 text-base mb-8 max-w-sm mx-auto">Create your first habit category to start tracking your daily progress.</p>
@@ -405,7 +569,8 @@ onMounted(() => {
             class="transition-all duration-200 h-full"
             :class="[
               dragOverHabitIndex === idx ? 'scale-105 opacity-80 shadow-xl ring-2 ring-primary-500 rounded-3xl' : '',
-              dragHabitIndex === idx ? 'opacity-40 scale-95' : 'opacity-100'
+              dragHabitIndex === idx ? 'opacity-40 scale-95' : 'opacity-100',
+              newlyCreatedHabitId === habit.id ? 'habit-card-entrance' : ''
             ]"
           >
             <HabitCard
@@ -422,37 +587,113 @@ onMounted(() => {
               @drag-habit-start="onDragHabitStart(idx, $event)"
             />
           </div>
+          
+          <!-- Skeleton for new habit -->
+          <div v-if="isCreatingHabit" class="h-full habit-card-entrance">
+            <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-5 shadow-sm h-full flex flex-col gap-4">
+              <div class="flex gap-3">
+                <USkeleton class="w-12 h-12 rounded-2xl shrink-0" />
+                <div class="space-y-2 flex-1 pt-1">
+                  <USkeleton class="h-4 w-1/2" />
+                  <USkeleton class="h-3 w-1/3" />
+                </div>
+              </div>
+              <USkeleton class="h-2 w-full mt-2" />
+              <div class="space-y-2 mt-2">
+                <USkeleton class="h-8 w-full rounded-xl" />
+                <USkeleton class="h-8 w-full rounded-xl" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Section: Momentum Stats -->
-      <div class="space-y-6">
+      <div class="animate-fade-up stagger-4 space-y-6">
         <h2 class="text-2xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-bar-chart-2" class="w-6 h-6 text-primary-500" />
           <span>Momentum Stats</span>
         </h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Best Streak</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.bestStreak }} days</span>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- Best Streak -->
+          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-orange-500/10 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <!-- Background Icon Watermark -->
+            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              <UIcon name="i-lucide-flame" class="w-32 h-32 text-orange-500 -mt-8 -mr-8 rotate-12" />
+            </div>
+            
+            <div class="relative z-10">
+              <div class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-orange-100 dark:border-orange-500/20">
+                <UIcon name="i-lucide-flame" class="w-6 h-6" />
+              </div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Best Streak</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.bestStreak }}</span>
+                <span class="text-sm font-semibold text-orange-500">days</span>
+              </div>
+            </div>
           </div>
-          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Completion Rate</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.completionRate }}%</span>
+
+          <!-- Completion Rate -->
+          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-green-500/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <!-- Background Icon Watermark -->
+            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              <UIcon name="i-lucide-target" class="w-32 h-32 text-green-500 -mt-8 -mr-8 rotate-12" />
+            </div>
+            
+            <div class="relative z-10">
+              <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-green-100 dark:border-green-500/20">
+                <UIcon name="i-lucide-target" class="w-6 h-6" />
+              </div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Completion Rate</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.completionRate }}</span>
+                <span class="text-sm font-semibold text-green-500">%</span>
+              </div>
+            </div>
           </div>
-          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Most Consistent</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.mostConsistent }}</span>
+
+          <!-- Most Consistent -->
+          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <!-- Background Icon Watermark -->
+            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              <UIcon name="i-lucide-award" class="w-32 h-32 text-blue-500 -mt-8 -mr-8 rotate-12" />
+            </div>
+            
+            <div class="relative z-10">
+              <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 mb-5 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-blue-100 dark:border-blue-500/20">
+                <UIcon name="i-lucide-award" class="w-6 h-6" />
+              </div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Most Consistent</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight line-clamp-1" :title="stats.mostConsistent">{{ stats.mostConsistent }}</span>
+              </div>
+            </div>
           </div>
-          <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 p-6 rounded-3xl shadow-sm flex flex-col justify-center">
-            <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Peak Time</span>
-            <span class="text-3xl font-bold text-gray-900 dark:text-white">{{ stats.peakTime }}</span>
+
+          <!-- Peak Time -->
+          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-purple-500/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <!-- Background Icon Watermark -->
+            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              <UIcon name="i-lucide-clock" class="w-32 h-32 text-purple-500 -mt-8 -mr-8 rotate-12" />
+            </div>
+            
+            <div class="relative z-10">
+              <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 mb-5 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-purple-100 dark:border-purple-500/20">
+                <UIcon name="i-lucide-clock" class="w-6 h-6" />
+              </div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Peak Focus Time</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.peakTime }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Section: Consistency -->
-      <div class="space-y-6">
+      <div class="animate-fade-up stagger-5 space-y-6">
         <h2 class="text-2xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-activity" class="w-6 h-6 text-primary-500" />
           <span>Consistency</span>
@@ -463,12 +704,12 @@ onMounted(() => {
       </div>
 
       <!-- Section: History Tracker -->
-      <div class="space-y-6">
+      <div class="animate-fade-up stagger-6 space-y-6">
         <HistoryTracker :habits="habits" @refresh="fetchHabits" />
       </div>
 
       <!-- Section: Behavioral Reflections -->
-      <div class="space-y-6">
+      <div class="animate-fade-up stagger-7 space-y-6">
         <h2 class="text-2xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-brain-circuit" class="w-6 h-6 text-primary-500" />
           <span>Behavioral Reflections</span>
@@ -624,7 +865,63 @@ onMounted(() => {
       v-model="isCreateModalOpen"
       :mode="modalMode"
       :initial-data="editingHabit"
+      :is-submitting="isSubmittingHabit"
       @submit="submitHabit"
     />
   </div>
 </template>
+
+<style scoped>
+/* ========================================
+   NEW HABIT CARD ENTRANCE ANIMATION
+   ======================================== */
+.habit-card-entrance {
+  animation: habit-card-pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes habit-card-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(20px);
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03) translateY(-4px);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* ========================================
+   STAGGERED FADE UP ANIMATIONS
+   ======================================== */
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fade-up {
+  from { 
+    opacity: 0; 
+    transform: translateY(24px); 
+    filter: blur(4px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+    filter: blur(0); 
+  }
+}
+
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 150ms; }
+.stagger-3 { animation-delay: 250ms; }
+.stagger-4 { animation-delay: 350ms; }
+.stagger-5 { animation-delay: 450ms; }
+.stagger-6 { animation-delay: 550ms; }
+.stagger-7 { animation-delay: 650ms; }
+</style>
