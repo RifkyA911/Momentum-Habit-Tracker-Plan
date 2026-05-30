@@ -166,13 +166,22 @@ onUnmounted(() => {
     </div>
 
     <!-- Timeline -->
-    <div v-else class="space-y-8 relative border-l-2 border-gray-200 dark:border-white/10 ml-5 pl-8 pb-8">
-      
-      <div v-for="day in historyDays" :key="day.dateStr" class="relative group is-active">
+    <div v-else class="relative pb-8">
+      <!-- Vertical line -->
+      <div class="absolute left-[18px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-white/10" />
+
+      <div v-for="day in historyDays" :key="day.dateStr" class="flex gap-6 mb-8">
         
-        <!-- Timeline Icon marker -->
-        <div class="absolute -left-[2.75rem] top-2 flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-[#020617] bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 shadow shrink-0" :class="day.completedTasks === day.totalTasks && day.totalTasks > 0 ? '!bg-primary-500 !text-white !border-primary-100 dark:!border-primary-900' : ''">
-          <UIcon :name="day.totalTasks > 0 ? (day.completedTasks === day.totalTasks ? 'i-lucide-check' : 'i-lucide-circle-dashed') : 'i-lucide-minus'" class="w-4 h-4" />
+        <!-- Circle marker: centered on the line (w-9 = 36px, left offset = 18 - 18 = 0) -->
+        <div class="shrink-0 relative z-10 mt-2">
+          <div
+            class="w-9 h-9 rounded-full border-4 border-white dark:border-[#020617] flex items-center justify-center shadow"
+            :class="day.completedTasks === day.totalTasks && day.totalTasks > 0
+              ? 'bg-primary-500 text-white'
+              : 'bg-gray-100 dark:bg-white/10 text-gray-400'"
+          >
+            <UIcon :name="day.totalTasks > 0 ? (day.completedTasks === day.totalTasks ? 'i-lucide-check' : 'i-lucide-circle-dashed') : 'i-lucide-minus'" class="w-4 h-4" />
+          </div>
         </div>
 
         <!-- Card content -->
