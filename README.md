@@ -20,24 +20,58 @@
 
 ---
 
-## 📖 Tentang Proyek
+## 📖 About Project
 
-**Momentum** adalah aplikasi habit tracker modern yang berfokus pada:
+**Momentum** is a modern habit tracker application focusing on:
 
-- 🎯 **Optimistic UI** - Feedback instan, tanpa loading spinner
-- 📊 **GitHub-Style Heatmap** - Visualisasi konsistensi 365 hari
-- 🤖 **AI Insights** - Analisis pola perilaku oleh Groq (LLaMA 3)
-- 🔥 **Streak Tracking** - Jangan putus rantai konsistensi
-- 🔐 **Better Auth** - OAuth Google & Email/Password
+- 🎯 **Optimistic UI** - Instant feedback, no loading spinner
+- 📊 **GitHub-Style Heatmap** - 365-day consistency visualization
+- 🤖 **AI Insights** - Behavioral pattern analysis by Groq (LLaMA 3)
+- 🔥 **Streak Tracking** - Don't break the consistency chain
+- 🔐 **Better Auth** - Google OAuth & Email/Password
+- 🎨 **Custom Theme** - Choose theme color with persistence
+- 🚀 **Demo Mode** - Try the app without login with dummy data
+- ⚡ **Animated Loading** - Loading screen with star trail and bouncing icon
 
-### 💡 Mengapa Momentum Berbeda?
+### 💡 Why Momentum is Different?
 
-| Fitur | Momentum | Habit Tracker Lain |
-|-------|----------|-------------------|
+| Feature | Momentum | Other Habit Trackers |
+|---------|----------|---------------------|
 | **UI Response** | ⚡ Instant (Optimistic) | 🐢 Loading spinner |
-| **Visualization** | 📊 GitHub-style Heatmap | 📅 Calendar biasa |
+| **Visualization** | 📊 GitHub-style Heatmap | 📅 Regular calendar |
 | **AI Insights** | 🤖 Behavioral analysis | ❌ Manual tracking |
-| **UX Philosophy** | 🧠 Dopamine-driven | 📋 Checklist boring |
+| **UX Philosophy** | 🧠 Dopamine-driven | 📋 Boring checklist |
+| **Theme System** | 🎨 Custom with persistence | ⚙️ Limited |
+| **Demo Mode** | 🚀 Try without login | ❌ Must register |
+| **Loading UX** | ⚡ Animated star trail | 🔄 Regular spinner |
+
+---
+
+## ✨ New Features
+
+### 🚀 Demo Mode
+- **Browser-based demo** with dummy data stored in localStorage
+- No authentication required to try the app
+- Same layout and features as main dashboard
+- Ideal for showcase and UX testing
+
+### 🎨 Custom Theme System
+- **Dynamic primary color picker** with 18 color options
+- **LocalStorage persistence** - color saved in browser
+- Automatic CSS variable generation for all shades (50-950)
+- Integrated with UnifiedThemePicker component
+
+### ⚡ Global Loading Screen
+- **Animated star trail background** with 30 colorful dots
+- **Bouncing activity icon** as loading indicator
+- **Flat design hills** at bottom for visual appeal
+- Appears on first app load before theme is ready
+
+### 📝 Footer Component
+- **Author attribution** with link to GitHub profile
+- **Repository link** for quick access to source code
+- **Brand logo** with tagline
+- Responsive design for mobile and desktop
 
 ---
 
@@ -86,7 +120,7 @@ cp .env.example .env
 
 ### 🔧 Environment Variables
 
-Buat file `.env` dengan konfigurasi berikut:
+Create a `.env` file with the following configuration:
 
 ```env
 # Database
@@ -105,11 +139,11 @@ GROQ_API_KEY=your_groq_api_key
 ```
 
 <details>
-<summary>🔑 Cara Mendapatkan Environment Variables</summary>
+<summary>🔑 How to Get Environment Variables</summary>
 
 ### DATABASE_URL (Supabase)
-1. Buat akun di [Supabase](https://supabase.com)
-2. Buat project baru
+1. Create account at [Supabase](https://supabase.com)
+2. Create new project
 3. Go to Settings > Database
 4. Copy connection string (use URI format)
 
@@ -119,13 +153,13 @@ openssl rand -base64 32
 ```
 
 ### Google OAuth
-1. Buka [Google Cloud Console](https://console.cloud.google.com)
+1. Open [Google Cloud Console](https://console.cloud.google.com)
 2. Create OAuth 2.0 Client ID
 3. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
 
 ### GROQ_API_KEY
-1. Daftar di [Groq](https://console.groq.com)
-2. Buat API key di dashboard
+1. Sign up at [Groq](https://console.groq.com)
+2. Create API key in dashboard
 
 </details>
 
@@ -149,7 +183,7 @@ pnpm run db:studio
 pnpm dev
 ```
 
-Buka **http://localhost:3000** di browser 🎉
+Open **http://localhost:3000** in your browser 🎉
 
 ---
 
@@ -238,7 +272,7 @@ habit_logs {
 }
 ```
 
-Diagram lengkap: [DATABASE.md](./docs/DATABASE.md)
+Full diagram: [DATABASE.md](./docs/DATABASE.md)
 
 ---
 
@@ -271,7 +305,7 @@ Diagram lengkap: [DATABASE.md](./docs/DATABASE.md)
 | `GET` | `/api/habits/heatmap` | Get yearly heatmap data |
 | `POST` | `/api/groq` | AI consistency insights |
 
-Dokumentasi lengkap: [API_SPECS.md](./docs/API_SPECS.md)
+Full documentation: [API_SPECS.md](./docs/API_SPECS.md)
 
 ---
 
@@ -301,7 +335,7 @@ User Click → Instant UI Update → State Update → Background API Call
 [Response: Personalized advice]
 ```
 
-**Prompt Engineering** detail: [AI_STRATEGY.md](./docs/AI_STRATEGY.md)
+**Prompt Engineering** details: [AI_STRATEGY.md](./docs/AI_STRATEGY.md)
 
 ---
 
@@ -335,8 +369,8 @@ pnpm preview
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/momentum)
 
-1. Push ke GitHub
-2. Connect repository di Vercel
+1. Push to GitHub
+2. Connect repository in Vercel
 3. Set environment variables
 4. Deploy! 🚀
 
@@ -365,20 +399,20 @@ pnpm db:studio        # Open Drizzle Studio
 
 ## 🤝 Contributing
 
-Kontribusi sangat diterima! Silakan buat **Pull Request**.
+Contributions are welcome! Please create a **Pull Request**.
 
 ### 🔄 Development Workflow
 
-1. **Fork** repository ini
-2. **Clone** fork Anda
-3. Buat **branch** fitur (`git checkout -b feature/amazing-feature`)
-4. **Commit** perubahan (`git commit -m 'feat: add amazing feature'`)
-5. **Push** ke branch (`git push origin feature/amazing-feature`)
-6. Buat **Pull Request**
+1. **Fork** this repository
+2. **Clone** your fork
+3. Create a **feature** branch (`git checkout -b feature/amazing-feature`)
+4. **Commit** your changes (`git commit -m 'feat: add amazing feature'`)
+5. **Push** to the branch (`git push origin feature/amazing-feature`)
+6. Create a **Pull Request**
 
 ### 📝 Commit Convention
 
-Gunakan [Conventional Commits](https://www.conventionalcommits.org/):
+Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
 feat: add AI weekly analysis
@@ -393,13 +427,13 @@ test: add unit tests for habits API
 
 ## 📝 License
 
-Proyek ini dilisensikan di bawah **MIT License** - lihat file [LICENSE](LICENSE) untuk detail.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
 ## 🙏 Acknowledgments
 
-Dibuat dengan:
+Built with:
 
 - ![Nuxt](https://img.shields.io/badge/Nuxt-00DC82?logo=nuxt.js&logoColor=white) [Nuxt](https://nuxt.com)
 - 🎨 [Nuxt UI](https://ui.nuxt.com) - Component Library
@@ -420,10 +454,10 @@ Dibuat dengan:
 
 <div align="center">
 
-**⭐ Jika proyek ini bermanfaat, berikan star! ⭐**
+**⭐ If this project is helpful, give it a star! ⭐**
 
-Dibuat dengan ❤️ oleh [Your Name](https://github.com/yourusername)
+Built with ❤️ by [Your Name](https://github.com/yourusername)
 
-[⬆ Kembali ke Atas](#-momentum)
+[⬆ Back to Top](#-momentum)
 
 </div>
