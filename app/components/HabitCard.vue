@@ -92,7 +92,7 @@ const onHeaderDragStart = (e: DragEvent) => {
         </div>
         <div class="min-w-0">
           <h3 class="font-bold text-lg text-gray-900 dark:text-white line-clamp-1" :title="props.habit.title">{{ props.habit.title }}</h3>
-          <p class="text-sm text-gray-500 line-clamp-1">{{ props.habit.description || 'No description' }}</p>
+          <p class="text-sm text-gray-500 line-clamp-1" :title="props.habit.description || 'No description'">{{ props.habit.description || 'No description' }}</p>
         </div>
       </div>
       
