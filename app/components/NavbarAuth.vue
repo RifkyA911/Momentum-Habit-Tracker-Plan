@@ -14,19 +14,19 @@ const handleSignOut = async () => {
 
 const userMenuItems = computed(() => [
   [{
-    label: 'Akun',
+    label: 'Account',
     icon: 'i-lucide-user',
     to: '/dashboard/account',
     click: () => playSound('nav')
   },
   {
-    label: 'Pengaturan',
+    label: 'Settings',
     icon: 'i-lucide-settings',
     to: '/dashboard/settings',
     click: () => playSound('nav')
   }],
   [{
-    label: 'Keluar',
+    label: 'Sign Out',
     icon: 'i-lucide-log-out',
     onSelect: handleSignOut,
     click: () => {
@@ -39,8 +39,7 @@ const userMenuItems = computed(() => [
 
 <template>
   <div class="flex items-center space-x-3 sm:space-x-4">
-    <ThemePicker />
-    <UColorModeButton />
+    <UnifiedThemePicker />
 
     <!-- Logged In: Avatar + Dropdown -->
     <template v-if="session?.user">

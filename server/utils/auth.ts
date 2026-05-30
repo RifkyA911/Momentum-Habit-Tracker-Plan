@@ -9,7 +9,10 @@ export const auth = betterAuth({
     schema
   }),
   emailAndPassword: {
-    enabled: true
+    enabled: true,
+    sendResetPassword: async ({ user, url, token }, request) => {
+      console.log(`[AUTH] Password reset link for ${user.email}: ${url}`)
+    }
   },
   socialProviders: {
     google: {
