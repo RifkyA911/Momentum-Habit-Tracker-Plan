@@ -1,7 +1,21 @@
 import { watch, ref } from 'vue'
 
+// Use a module-level ref to share state across components
+const themeHex = ref('#f97316')
+
 export const useTheme = () => {
-  const themeHex = useState('theme-hex', () => '#f97316') // default to orange
+  // Load from localStorage on first call
+  if (typeof window !== 'undefined' && themeHex.value === '#f97316') {
+    try {
+      const stored = localStorage.getItem('theme-hex')
+      if (stored) {
+        themeHex.value = stored
+        console.log('Theme loaded from localStorage:', stored)
+      }
+    } catch (e) {
+      console.error('Failed to load theme from localStorage:', e)
+    }
+  }
 
   const hexToRgb = (hex: string) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
@@ -49,7 +63,18 @@ export const useTheme = () => {
 
   // Watch for changes and update
   watch(themeHex, (newHex) => {
-    updateCSSVariables(newHex)
+    if (newHex) {
+      updateCSSVariables(newHex)
+      // Save to localStorage
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('theme-hex', newHex)
+          console.log('Theme saved to localStorage:', newHex)
+        }
+      } catch (e) {
+        console.error('Failed to save theme to localStorage:', e)
+      }
+    }
   }, { immediate: true })
 
   return { themeHex }
