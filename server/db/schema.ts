@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
@@ -44,4 +44,33 @@ export const verification = pgTable("verification", {
 	expiresAt: timestamp("expiresAt").notNull(),
 	createdAt: timestamp("createdAt"),
 	updatedAt: timestamp("updatedAt")
+});
+
+export const habit = pgTable("habit", {
+	id: text("id").primaryKey(),
+	userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
+	title: text("title").notNull(),
+	icon: text("icon").notNull(),
+	color: text("color").notNull(),
+	description: text("description"),
+	orderIndex: integer("orderIndex").default(0),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow()
+});
+
+export const habitTask = pgTable("habitTask", {
+	id: text("id").primaryKey(),
+	habitId: text("habitId").notNull().references(() => habit.id, { onDelete: 'cascade' }),
+	text: text("text").notNull(),
+	completed: boolean("completed").notNull().default(false),
+	completedAt: timestamp("completedAt"),
+	orderIndex: integer("orderIndex").default(0),
+	createdAt: timestamp("createdAt").notNull().defaultNow()
+});
+
+export const habitLog = pgTable("habitLog", {
+	id: text("id").primaryKey(),
+	habitId: text("habitId").notNull().references(() => habit.id, { onDelete: 'cascade' }),
+	userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
+	completedAt: timestamp("completedAt").notNull().defaultNow()
 });
