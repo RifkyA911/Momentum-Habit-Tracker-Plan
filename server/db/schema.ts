@@ -74,3 +74,14 @@ export const habitLog = pgTable("habitLog", {
 	userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
 	completedAt: timestamp("completedAt").notNull().defaultNow()
 });
+
+export const feedback = pgTable("feedback", {
+	id: text("id").primaryKey(),
+	userId: text("userId").references(() => user.id, { onDelete: 'set null' }),
+	name: text("name").notNull(),
+	email: text("email").notNull(),
+	category: text("category").notNull(),
+	rating: integer("rating").notNull(),
+	feedback: text("feedback").notNull(),
+	createdAt: timestamp("createdAt").notNull().defaultNow()
+});

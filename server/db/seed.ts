@@ -47,13 +47,12 @@ async function main() {
   }
   await db.delete(schema.habit).where(eq(schema.habit.userId, testUser!.id))
 
-  // 2. Create realistic habits
+  // 2. Create realistic habits (4 habits)
   const habitsToCreate = [
     { title: 'Morning Workout', icon: '🏋️', color: '#3b82f6', description: 'Strength training and cardio sessions' },
     { title: 'Read Books', icon: '📚', color: '#10b981', description: 'Read at least 15 pages of non-fiction' },
     { title: 'Mindful Meditation', icon: '🧘', color: '#8b5cf6', description: 'Calm breathing and mental relaxation' },
-    { title: 'Write Journal', icon: '📝', color: '#f59e0b', description: 'Log thoughts, progress, and daily reflection' },
-    { title: 'Code Projects', icon: '💻', color: '#ec4899', description: 'Contribute to side projects and open source' }
+    { title: 'Write Journal', icon: '📝', color: '#f59e0b', description: 'Log thoughts, progress, and daily reflection' }
   ]
 
   const insertedHabits = []
@@ -75,90 +74,54 @@ async function main() {
 
   console.log(`Created ${insertedHabits.length} habits.`)
 
-  // 3. Generate completed tasks for the last 365 days to fill the heatmap
-  console.log("Generating historical completed tasks...")
-  const today = new Date()
+  // 3. Generate 5 tasks per habit
+  console.log("Generating tasks...")
   let taskCount = 0
 
-  // Define 4 streak gap periods (bolong-bolong streak)
-  // Each gap is 5-7 days of no completions
-  const streakGaps = [
-    { start: 45, end: 50 },   // Gap 1: days 45-50 ago
-    { start: 90, end: 96 },   // Gap 2: days 90-96 ago
-    { start: 180, end: 187 },  // Gap 3: days 180-187 ago
-    { start: 270, end: 278 }   // Gap 4: days 270-278 ago
-  ]
-
-  for (let dayOffset = 365; dayOffset >= 1; dayOffset--) {
-    const targetDate = new Date()
-    targetDate.setDate(today.getDate() - dayOffset)
-    const isWeekend = targetDate.getDay() === 0 || targetDate.getDay() === 6
-    
-    // Check if this day is in a streak gap
-    const isInGap = streakGaps.some(gap => dayOffset >= gap.start && dayOffset <= gap.end)
-    
-    if (isInGap) {
-      // Skip completions during streak gaps
-      continue
-    }
-    
-    // Choose how many habits are completed on this day (weekdays have higher rate)
-    const completionChance = isWeekend ? 0.4 : 0.75
-    
-    for (const habit of insertedHabits) {
-      if (Math.random() < completionChance) {
-        // Create 1-2 completed tasks for this habit on this day
-        const numTasks = Math.random() > 0.5 ? 2 : 1
-        for (let t = 0; t < numTasks; t++) {
-          const taskId = faker.string.uuid()
-          await db.insert(schema.habitTask).values({
-            id: taskId,
-            habitId: habit!.id,
-            text: `Completed session of ${habit!.title}`,
-            completed: true,
-            completedAt: new Date(targetDate),
-            orderIndex: t,
-            createdAt: new Date(targetDate)
-          })
-          taskCount++
-        }
-      }
-    }
-  }
-
-  // 4. Create active (uncompleted or recently completed) tasks for today
-  console.log("Generating today's active tasks...")
-  const taskOptions = [
-    ["15 min Stretch", "Pushups set", "5km Running"],
-    ["Read 1 chapter", "Summarize notes", "Highlight takeaways"],
-    ["10 min deep breathing", "Gratitude listing", "Post-meditation journaling"],
-    ["Morning pages", "Bullet journal update", "Gratitude entry"],
-    ["Fix Github issue", "Refactor module", "Write unit test"]
-  ]
-
-  for (let i = 0; i < insertedHabits.length; i++) {
-    const habit = insertedHabits[i]
-    const options = taskOptions[i]
-    
-    if (!habit || !options) continue
-    
-    for (let t = 0; t < options.length; t++) {
+  for (const habit of insertedHabits) {
+    for (let i = 0; i < 5; i++) {
       const taskId = faker.string.uuid()
-      const isDone = Math.random() > 0.4
+      const isCompleted = Math.random() > 0.3
       await db.insert(schema.habitTask).values({
-        id: taskId as any,
-        habitId: habit.id as any,
-        text: options[t] as any,
-        completed: isDone,
-        completedAt: isDone ? new Date() : null,
-        orderIndex: t,
-        createdAt: new Date()
+        id: taskId,
+        habitId: habit!.id,
+        text: `Task ${i + 1} for ${habit!.title}`,
+        completed: isCompleted,
+        completedAt: isCompleted ? new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000) : null,
+        orderIndex: i,
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
       })
       taskCount++
     }
   }
 
-  console.log(`Seeding complete! Successfully seeded ${taskCount} tasks across habits.`)
+  console.log(`Seeded ${taskCount} tasks across habits.`)
+
+  // 5. Seed feedback data
+  console.log("Seeding feedback data...")
+  const feedbackCategories = ['bug', 'feature', 'uiux', 'other']
+  const feedbackData = [
+    { name: 'John Doe', email: 'john@example.com', category: 'feature', rating: 5, feedback: 'Great app! Would love to see dark mode improvements.' },
+    { name: 'Jane Smith', email: 'jane@example.com', category: 'uiux', rating: 4, feedback: 'The UI is clean but could use more animations.' },
+    { name: 'Mike Johnson', email: 'mike@example.com', category: 'bug', rating: 3, feedback: 'Found a bug in the habit completion flow.' },
+    { name: 'Sarah Wilson', email: 'sarah@example.com', category: 'other', rating: 5, feedback: 'Love the dopamine effects!' }
+  ]
+
+  for (const fb of feedbackData) {
+    await db.insert(schema.feedback).values({
+      id: faker.string.uuid(),
+      userId: testUser!.id,
+      name: fb.name,
+      email: fb.email,
+      category: fb.category,
+      rating: fb.rating,
+      feedback: fb.feedback,
+      createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+    })
+  }
+
+  console.log(`Seeded ${feedbackData.length} feedback entries.`)
+
   process.exit(0)
 }
 
