@@ -166,12 +166,12 @@ onUnmounted(() => {
     </div>
 
     <!-- Timeline -->
-    <div v-else class="space-y-8 relative border-l-2 border-gray-200 dark:border-white/10 ml-4 pl-8 pb-8">
+    <div v-else class="space-y-8 relative border-l-2 border-gray-200 dark:border-white/10 ml-5 pl-8 pb-8">
       
       <div v-for="day in historyDays" :key="day.dateStr" class="relative group is-active">
         
         <!-- Timeline Icon marker -->
-        <div class="absolute -left-12 mt-2 flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-[#0B0D0F] bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 shadow shrink-0" :class="day.completedTasks === day.totalTasks && day.totalTasks > 0 ? '!bg-primary-500 text-white border-primary-100 dark:border-primary-900' : ''">
+        <div class="absolute -left-[2.75rem] top-2 flex items-center justify-center w-8 h-8 rounded-full border-4 border-white dark:border-[#020617] bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 shadow shrink-0" :class="day.completedTasks === day.totalTasks && day.totalTasks > 0 ? '!bg-primary-500 !text-white !border-primary-100 dark:!border-primary-900' : ''">
           <UIcon :name="day.totalTasks > 0 ? (day.completedTasks === day.totalTasks ? 'i-lucide-check' : 'i-lucide-circle-dashed') : 'i-lucide-minus'" class="w-4 h-4" />
         </div>
 
