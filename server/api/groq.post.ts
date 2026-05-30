@@ -16,6 +16,90 @@ export default defineEventHandler(async (event) => {
   })
 
   try {
+    // Check if this is a behavioral reflection request
+    if (body.type === 'reflection' && body.habitData) {
+      const { habitData } = body
+
+      const systemPrompt = `You are Momentum, a calm, premium, and emotionally intelligent behavioral reflection system. Your role is to observe user patterns and provide data-backed insights without being motivational or preachy.
+
+Core principles:
+- Be calm, reflective, and analytical
+- Focus on data-driven observations
+- Avoid gamification, hustle culture, or empty motivational quotes
+- Keep insights concise (1-2 sentences maximum)
+- Be supportive but objective
+
+Analyze the user's habit completion data and provide ONE short, reflective observation about their behavioral patterns. The insight should be factual, specific to their data, and emotionally intelligent.`
+
+      const userPrompt = `Here is my habit data from the last 30 days:
+
+Total habits: ${habitData.totalHabits}
+Total completions: ${habitData.totalCompletions}
+
+Habit completion breakdown:
+${habitData.habitStats.map((s: any) => `- ${s.habitTitle}: ${s.completedCount} completions`).join('\n')}
+
+Time of day patterns:
+${Object.entries(habitData.timePatterns).map(([time, count]) => `- ${time}: ${count} completions`).join('\n')}
+
+Day of week patterns:
+${Object.entries(habitData.dayPatterns).map(([day, count]) => `- ${day}: ${count} completions`).join('\n')}
+
+Provide ONE short, reflective observation about my behavioral patterns based on this data.`
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        model: 'llama-3.1-8b-instant',
+        temperature: 0.7,
+        max_tokens: 200
+      })
+
+      return {
+        insight: chatCompletion.choices[0]?.message?.content || 'Unable to generate insight at this time.'
+      }
+    }
+
+    if (body.type === 'generate-habit' && body.prompt) {
+      const systemPrompt = `You are an AI that generates habit tracking templates. The user will give you a goal or topic. You must respond with ONLY a valid JSON object, no markdown formatting, no explanations. 
+Format:
+{
+  "title": "Short catchy title (max 3 words)",
+  "icon": "One single relevant emoji",
+  "color": "A vibrant hex color code (e.g. #3b82f6)",
+  "description": "Short motivational description",
+  "tasks": ["Task 1", "Task 2", "Task 3"]
+}
+Limit tasks to 3-5 specific, actionable items.`
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: body.prompt }
+        ],
+        model: 'llama-3.1-8b-instant',
+        temperature: 0.7,
+        max_tokens: 300,
+        response_format: { type: 'json_object' }
+      })
+
+      const content = chatCompletion.choices[0]?.message?.content || '{}'
+      try {
+        return JSON.parse(content)
+      } catch (e) {
+        throw createError({ statusCode: 500, message: 'Failed to parse AI response' })
+      }
+    }
+
+    // Default chat behavior
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
