@@ -32,6 +32,10 @@ To ensure the project can be completed in a 4-week MVP without over-engineering:
 2. **Optimistic UI Check-ins**: Clicking complete feels instant without waiting for server response.
 3. **Advanced Heatmap**: GitHub-style contribution graph.
 4. **AI Consistency Insights (Powered by Groq)**: Analyze user's habit logs and provide actionable feedback.
+5. **Demo Mode**: Browser-based demo with dummy data for users to try the app without authentication.
+6. **Custom Theme System**: Dynamic primary color picker with localStorage persistence.
+7. **Global Loading Screen**: Animated loading screen with star trail background and bouncing icon.
+8. **Footer Component**: Author attribution and repository links.
 
 ## 6. MVP Timeline (4 Weeks)
 - **Week 1:** Project setup, Database Schema (Drizzle), Authentication (Better Auth).
