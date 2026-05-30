@@ -39,7 +39,10 @@ const grid = computed(() => {
   const days: { date: string; count: number; dayOfWeek: number; jsDate: Date }[] = []
   const cursor = new Date(actualStart)
   while (cursor <= actualEnd) {
-    const dateStr = cursor.toISOString().split('T')[0]
+    const y = cursor.getFullYear()
+    const m = String(cursor.getMonth() + 1).padStart(2, '0')
+    const d = String(cursor.getDate()).padStart(2, '0')
+    const dateStr = `${y}-${m}-${d}`
     days.push({
       date: dateStr,
       count: dataMap.value[dateStr] || 0,
