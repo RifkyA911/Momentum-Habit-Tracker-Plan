@@ -4,7 +4,7 @@
 
 ### *Build momentum, not motivation*
 
-**AI-Powered Habit Tracker** dengan Optimistic UI, GitHub-Style Heatmap, dan Behavioral Insights
+**AI-Powered Habit Tracker** with Optimistic UI, GitHub-Style Heatmap, and Behavioral Insights
 
 [![Nuxt](https://img.shields.io/badge/Nuxt-4.4.6-00DC82?logo=nuxt.js&logoColor=white)](https://nuxt.com)
 [![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org)
@@ -12,9 +12,8 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-[🚀 Demo](#) · [📖 Dokumentasi](./docs) · [🐛 Report Bug](https://github.com/yourusername/momentum/issues) · [✨ Request Feature](https://github.com/yourusername/momentum/issues)
+[🚀 Demo](#) · [📖 Documentation](./docs) · [🐛 Report Bug](https://github.com/yourusername/momentum/issues) · [✨ Request Feature](https://github.com/yourusername/momentum/issues)
 
-<img src="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png" alt="Momentum Preview" width="800px">
 
 </div>
 
@@ -30,7 +29,7 @@
 - 🔥 **Streak Tracking** - Don't break the consistency chain
 - 🔐 **Better Auth** - Google OAuth & Email/Password
 - 🎨 **Custom Theme** - Choose theme color with persistence
-- 🚀 **Demo Mode** - Try the app without login with dummy data
+- 🚀 **Demo Mode** - Browser-based showcase with sample data
 - ⚡ **Animated Loading** - Loading screen with star trail and bouncing icon
 
 ### 💡 Why Momentum is Different?
@@ -42,7 +41,7 @@
 | **AI Insights** | 🤖 Behavioral analysis | ❌ Manual tracking |
 | **UX Philosophy** | 🧠 Dopamine-driven | 📋 Boring checklist |
 | **Theme System** | 🎨 Custom with persistence | ⚙️ Limited |
-| **Demo Mode** | 🚀 Try without login | ❌ Must register |
+| **Demo Mode** | 🚀 Showcase sample | ❌ Must register |
 | **Loading UX** | ⚡ Animated star trail | 🔄 Regular spinner |
 
 ---
@@ -50,16 +49,22 @@
 ## ✨ New Features
 
 ### 🚀 Demo Mode
-- **Browser-based demo** with dummy data stored in localStorage
-- No authentication required to try the app
+- **Browser-based showcase** with sample data stored in localStorage
+- No authentication required to view the demo
 - Same layout and features as main dashboard
-- Ideal for showcase and UX testing
+- Ideal for showcase and UX demonstration
 
 ### 🎨 Custom Theme System
 - **Dynamic primary color picker** with 18 color options
 - **LocalStorage persistence** - color saved in browser
 - Automatic CSS variable generation for all shades (50-950)
 - Integrated with UnifiedThemePicker component
+
+### 🔌 MCP Utility Integration
+- **Model Context Protocol (MCP)** integration for enhanced AI capabilities
+- Seamless connection with MCP-compatible tools and services
+- Extensible architecture for custom MCP utilities
+- Enables advanced AI interactions and data processing
 
 ### ⚡ Global Loading Screen
 - **Animated star trail background** with 30 colorful dots
@@ -91,6 +96,7 @@
 
 ### AI & Cloud
 ![Groq](https://img.shields.io/badge/Groq-FF6B35?logo=groq&logoColor=white) **Groq** - LLaMA 3 API  
+![MCP](https://img.shields.io/badge/MCP-8B5CF6?logo=model-context-protocol&logoColor=white) **MCP** - Model Context Protocol  
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white) **Vercel** - Deployment  
 
 ---
@@ -100,7 +106,7 @@
 ### 📋 Prerequisites
 
 ![Node](https://img.shields.io/badge/Node.js-22+-339933?logo=node.js&logoColor=white) **Node.js 22+**  
-![pnpm](https://img.shields.io/badge/pnpm-11+-F69220?logo=pnpm&logoColor=white) **pnpm 11+**  
+![Bun](https://img.shields.io/badge/Bun-1.0+-FF6B35?logo=bun&logoColor=white) **Bun 1.0+** (primary)  
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-12+-4169E1?logo=postgresql&logoColor=white) **PostgreSQL** (Supabase recommended)  
 ![Groq API](https://img.shields.io/badge/Groq_API-Optional-FF6B35) **Groq API Key** (optional)  
 
@@ -112,7 +118,7 @@ git clone https://github.com/yourusername/momentum.git
 cd momentum
 
 # 2️⃣ Install dependencies
-pnpm install
+bun install
 
 # 3️⃣ Setup environment variables
 cp .env.example .env
@@ -126,7 +132,7 @@ Create a `.env` file with the following configuration:
 # Database
 DATABASE_URL=your_postgresql_connection_string
 
-# Better Auth (minimal 32 karakter)
+# Better Auth (minimum 32 characters)
 BETTER_AUTH_SECRET=generate_with_openssl_rand_base64_32
 BETTER_AUTH_URL=http://localhost:3000
 
@@ -134,7 +140,7 @@ BETTER_AUTH_URL=http://localhost:3000
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-# Groq AI (optional untuk AI insights)
+# Groq AI (optional for AI insights)
 GROQ_API_KEY=your_groq_api_key
 ```
 
@@ -167,20 +173,20 @@ openssl rand -base64 32
 
 ```bash
 # Generate migrations
-pnpm run db:generate
+bun run db:generate
 
 # Push schema to database
-pnpm run db:push
+bun run db:push
 
 # (Optional) Open Drizzle Studio
-pnpm run db:studio
+bun run db:studio
 ```
 
 ### 🎯 Run Development Server
 
 ```bash
 # Start dev server
-pnpm dev
+bun dev
 ```
 
 Open **http://localhost:3000** in your browser 🎉
@@ -262,7 +268,7 @@ habits {
   created_at: timestamp
 }
 
-// Habit Logs Table (untuk heatmap)
+// Habit Logs Table (for heatmap)
 habit_logs {
   id: uuid
   habit_id: uuid (FK)
@@ -359,10 +365,10 @@ User Click → Instant UI Update → State Update → Background API Call
 
 ```bash
 # Build
-pnpm build
+bun run build
 
 # Preview locally
-pnpm preview
+bun run preview
 ```
 
 ### Deploy to Vercel
@@ -380,19 +386,19 @@ pnpm preview
 
 ```bash
 # Development
-pnpm dev              # Start dev server
-pnpm build            # Build for production
-pnpm preview          # Preview production build
+bun dev              # Start dev server
+bun run build        # Build for production
+bun run preview      # Preview production build
 
 # Code Quality
-pnpm lint             # Run ESLint
-pnpm typecheck        # TypeScript type checking
+bun run lint         # Run ESLint
+bun run typecheck    # TypeScript type checking
 
 # Database
-pnpm db:generate      # Generate Drizzle migrations
-pnpm db:push          # Push schema changes
-pnpm db:migrate       # Run migrations
-pnpm db:studio        # Open Drizzle Studio
+bun run db:generate  # Generate Drizzle migrations
+bun run db:push      # Push schema changes
+bun run db:migrate   # Run migrations
+bun run db:studio    # Open Drizzle Studio
 ```
 
 ---
@@ -446,7 +452,7 @@ Built with:
 
 ## 📞 Contact & Support
 
-- 📧 Email: your.email@example.com
+- 📧 Email: rifkyakhmad911@gmail.com
 - 🐛 Bug Reports: [GitHub Issues](https://github.com/yourusername/momentum/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/momentum/discussions)
 
@@ -456,7 +462,7 @@ Built with:
 
 **⭐ If this project is helpful, give it a star! ⭐**
 
-Built with ❤️ by [Your Name](https://github.com/yourusername)
+Built with 🌳 by RifkyA110
 
 [⬆ Back to Top](#-momentum)
 
