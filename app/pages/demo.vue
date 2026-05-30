@@ -261,7 +261,7 @@ onMounted(() => {
 
       <div v-if="isLoading" class="space-y-10">
         <USkeleton class="h-16 w-full rounded-3xl" />
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
           <USkeleton class="h-[300px] w-full rounded-3xl" />
           <USkeleton class="h-[300px] w-full rounded-3xl" />
           <USkeleton class="h-[300px] w-full rounded-3xl" />
@@ -460,7 +460,7 @@ onMounted(() => {
             <UButton color="neutral" @click="openCreateModal" size="xl" class="rounded-full px-8 shadow-md">Create Habit</UButton>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             <div
               v-for="(habit, idx) in habits" 
               :key="habit.id"

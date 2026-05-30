@@ -48,7 +48,79 @@ onMounted(() => {
   setInterval(rotatePhrase, 3000)
 })
 
-// Intersection Observer for scroll-triggered animations
+// Feedback form state
+const feedbackForm = ref({
+  rating: 0,
+  name: '',
+  email: '',
+  category: '',
+  feedback: ''
+})
+
+const isSubmitting = ref(false)
+const showThankYouModal = ref(false)
+
+const submitFeedback = async () => {
+  isSubmitting.value = true
+  
+  try {
+    await $fetch('/api/feedback', {
+      method: 'POST',
+      body: {
+        rating: feedbackForm.value.rating,
+        name: feedbackForm.value.name,
+        email: feedbackForm.value.email,
+        category: feedbackForm.value.category,
+        feedback: feedbackForm.value.feedback
+      }
+    })
+    
+    isSubmitting.value = false
+    showThankYouModal.value = true
+    
+    // Play tada sound
+    playTadaSound()
+  } catch (error) {
+    console.error('Failed to submit feedback:', error)
+    isSubmitting.value = false
+  }
+}
+
+const playTadaSound = () => {
+  // Use Web Audio API to create a simple success sound
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const oscillator = audioContext.createOscillator()
+    const gainNode = audioContext.createGain()
+    
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.destination)
+    
+    oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
+    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1) // E5
+    oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2) // G5
+    
+    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+    
+    oscillator.start(audioContext.currentTime)
+    oscillator.stop(audioContext.currentTime + 0.5)
+  } catch (error) {
+    console.error('Failed to play sound:', error)
+  }
+}
+
+const closeThankYouModal = () => {
+  showThankYouModal.value = false
+  // Reset form
+  feedbackForm.value = {
+    rating: 0,
+    name: '',
+    email: '',
+    category: '',
+    feedback: ''
+  }
+}
 const observerCallback = (entries: IntersectionObserverEntry[]) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
@@ -76,6 +148,8 @@ onMounted(() => {
       <div class="orb orb-1"></div>
       <div class="orb orb-2"></div>
       <div class="orb orb-3"></div>
+      <div class="orb orb-4"></div>
+      <div class="orb orb-5"></div>
     </div>
 
     <!-- Floating Particles -->
@@ -85,17 +159,30 @@ onMounted(() => {
       <div class="particle particle-3"></div>
       <div class="particle particle-4"></div>
       <div class="particle particle-5"></div>
+      <div class="particle particle-6"></div>
+      <div class="particle particle-7"></div>
+      <div class="particle particle-8"></div>
+      <div class="particle particle-9"></div>
+      <div class="particle particle-10"></div>
+      <div class="particle particle-11"></div>
+      <div class="particle particle-12"></div>
+      <div class="particle particle-13"></div>
+      <div class="particle particle-14"></div>
+      <div class="particle particle-15"></div>
     </div>
 
-    <section class="max-w-5xl mx-auto px-6 pt-32 pb-32 text-center relative z-10">
+    <section class="max-w-5xl mx-auto px-6 pt-32 pb-32 text-center relative z-10 animate-on-scroll fade-up">
       <!-- HERO SECTION -->
       <div class="hero-badge inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-500/10 text-primary-600 dark:text-primary-400 font-medium text-sm mb-6 border border-primary-500/20 shimmer-badge">
         <UIcon name="i-lucide-sparkles" class="w-4 h-4" />
         <span>Meet Momentum AI</span>
       </div>
 
-      <h1 class="hero-title text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 leading-tight">
-        Build Momentum.
+      <h1 class="hero-title text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white  leading-tight">
+        Build Your
+      </h1>
+      <h1 class="hero-title text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight bg-gradient-to-r from-primary-500 to-primary-600 bg-clip-text text-transparent">
+        Momentum
       </h1>
 
       <p class="hero-subtitle text-xl text-gray-500 dark:text-gray-400 max-w-2xl mx-auto mb-4">
@@ -407,7 +494,10 @@ onMounted(() => {
 
     <!-- FINAL CTA -->
     <section class="max-w-5xl mx-auto px-6 animate-on-scroll fade-up mt-32 mb-20 text-center">
-      <h2 class="text-3xl font-bold mb-8">Start building consistency.</h2>
+      <h2 class="text-3xl font-bold mb-4">Start building consistency.</h2>
+      <p class="text-gray-500 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+        A simple habit tracker designed to help you build better habits through consistency and behavioral insights.
+      </p>
       <template v-if="session?.user">
         <UButton
           to="/dashboard"
@@ -431,6 +521,184 @@ onMounted(() => {
         </UButton>
       </template>
     </section>
+
+    <!-- FEEDBACK SECTION -->
+    <section class="max-w-4xl mx-auto px-6 animate-on-scroll fade-up mt-32 mb-20">
+      <div class="text-center mb-12">
+        <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary-500/10 text-primary-500 text-xs font-semibold tracking-wide uppercase mb-4">
+          <UIcon name="i-lucide-message-square" class="w-3.5 h-3.5" />
+          <span>Feedback</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
+          We'd Love to Hear From You
+        </h2>
+        <p class="text-lg text-gray-500 dark:text-gray-400">
+          Help us improve Momentum by sharing your thoughts.
+        </p>
+      </div>
+
+      <div class="bg-white/50 dark:bg-[#0f172a]/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-3xl p-8 md:p-12 shadow-lg">
+        <form @submit.prevent="submitFeedback" class="space-y-6">
+          <!-- Rating -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              ⭐ Rate Your Experience
+            </label>
+            <div class="flex gap-2">
+              <button
+                v-for="star in 5"
+                :key="star"
+                type="button"
+                @click="feedbackForm.rating = star"
+                class="w-10 h-10 rounded-full transition-all duration-200 hover:scale-110"
+                :class="star <= feedbackForm.rating ? 'bg-yellow-400 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-400'"
+              >
+                <UIcon :name="star <= feedbackForm.rating ? 'i-lucide-star' : 'i-lucide-star'" class="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Name -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Name <span class="text-red-500">*</span>
+            </label>
+            <UInput
+              v-model="feedbackForm.name"
+              type="text"
+              placeholder="Your name"
+              size="lg"
+              class="w-full"
+              required
+            />
+          </div>
+
+          <!-- Email -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email <span class="text-red-500">*</span>
+            </label>
+            <UInput
+              v-model="feedbackForm.email"
+              type="email"
+              placeholder="your@email.com"
+              size="lg"
+              class="w-full"
+              required
+            />
+          </div>
+
+          <!-- Category -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Category
+            </label>
+            <USelect
+              v-model="feedbackForm.category"
+              :items="[
+                { label: 'Bug', value: 'bug' },
+                { label: 'Feature Request', value: 'feature' },
+                { label: 'UI/UX', value: 'uiux' },
+                { label: 'Other', value: 'other' }
+              ]"
+              placeholder="Select a category"
+              size="lg"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Feedback -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Feedback
+            </label>
+            <UTextarea
+              v-model="feedbackForm.feedback"
+              placeholder="Share your thoughts..."
+              :rows="4"
+              size="lg"
+              class="w-full"
+            />
+          </div>
+
+          <!-- Submit Button -->
+          <div class="flex justify-center">
+            <UButton
+              type="submit"
+              color="primary"
+              size="xl"
+              :loading="isSubmitting"
+              :disabled="isSubmitting"
+              class="rounded-full px-10 py-4 font-medium"
+            >
+              Submit Feedback
+            </UButton>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- THANK YOU MODAL -->
+    <UModal
+      v-model:open="showThankYouModal"
+    >
+    <template #content>
+
+      <UCard>
+        <div class="relative p-8 md:p-12 text-center">
+          <!-- Close button -->
+          <button
+            @click="closeThankYouModal"
+            class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            <UIcon name="i-lucide-x" class="w-4 h-4 text-gray-500" />
+          </button>
+
+          <!-- Success Icon -->
+          <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center animate-bounce">
+            <UIcon name="i-lucide-check-circle" class="w-10 h-10 text-green-500" />
+          </div>
+
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">
+            Thank You! 🎉
+          </h3>
+          
+          <p class="text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+            Your feedback has been successfully submitted. We appreciate you taking the time to help us improve Momentum. Your insights are invaluable in shaping the future of our product.
+          </p>
+
+          <div class="bg-primary-50 dark:bg-primary-900/20 rounded-2xl p-4 mb-6">
+            <p class="text-sm text-primary-700 dark:text-primary-300">
+              <UIcon name="i-lucide-sparkles" class="w-4 h-4 inline mr-1" />
+              We'll review your feedback and get back to you if needed.
+            </p>
+          </div>
+
+          <UButton
+            @click="closeThankYouModal"
+            color="primary"
+            size="lg"
+            class="rounded-full px-8 font-medium"
+          >
+            Close
+          </UButton>
+        </div>
+      </UCard>
+    </template>
+    </UModal>
+
+    <!-- FIREWORKS CONTAINER -->
+    <div v-if="showThankYouModal" class="fireworks-container fixed inset-0 pointer-events-none z-[200]">
+      <div class="firework"></div>
+      <div class="firework"></div>
+      <div class="firework"></div>
+      <div class="firework"></div>
+      <div class="firework"></div>
+      <div class="confetti"></div>
+      <div class="confetti"></div>
+      <div class="confetti"></div>
+      <div class="confetti"></div>
+    </div>
   </div>
 </template>
 
@@ -448,8 +716,8 @@ onMounted(() => {
 .orb-1 {
   width: 600px;
   height: 600px;
-  top: -10%;
-  left: 10%;
+  top: -7%;
+  left: 5%;
   background: radial-gradient(circle, var(--color-primary-500), transparent 70%);
   animation: orb-drift-1 20s ease-in-out infinite;
 }
@@ -458,7 +726,7 @@ onMounted(() => {
   width: 500px;
   height: 500px;
   top: 30%;
-  right: -5%;
+  right: -18%;
   background: radial-gradient(circle, #a855f7, transparent 70%);
   animation: orb-drift-2 25s ease-in-out infinite;
 }
@@ -467,9 +735,27 @@ onMounted(() => {
   width: 450px;
   height: 450px;
   bottom: -20%;
-  left: 20%;
+  left: 18%;
   background: radial-gradient(circle, #3b82f6, transparent 70%);
   animation: orb-drift-3 22s ease-in-out infinite;
+}
+
+.orb-4 {
+  width: 400px;
+  height: 400px;
+  top: 50%;
+  left: -10%;
+  background: radial-gradient(circle, #ec4899, transparent 70%);
+  animation: orb-drift-4 28s ease-in-out infinite;
+}
+
+.orb-5 {
+  width: 350px;
+  height: 350px;
+  bottom: 10%;
+  right: 5%;
+  background: radial-gradient(circle, #14b8a6, transparent 70%);
+  animation: orb-drift-5 24s ease-in-out infinite;
 }
 
 @keyframes orb-drift-1 {
@@ -487,6 +773,17 @@ onMounted(() => {
 @keyframes orb-drift-3 {
   0%, 100% { transform: translate(0, 0) scale(1); }
   50% { transform: translate(50px, -50px) scale(1.15); }
+}
+
+@keyframes orb-drift-4 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 30px) scale(1.05); }
+  66% { transform: translate(-20px, -40px) scale(0.95); }
+}
+
+@keyframes orb-drift-5 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 20px) scale(1.1); }
 }
 
 /* ========================================
@@ -507,6 +804,16 @@ onMounted(() => {
 .particle-3 { top: 30%; left: 70%; animation-delay: 4s; animation-duration: 16s; }
 .particle-4 { top: 70%; left: 25%; animation-delay: 6s; animation-duration: 13s; }
 .particle-5 { top: 45%; left: 55%; animation-delay: 3s; animation-duration: 15s; }
+.particle-6 { top: 15%; left: 85%; animation-delay: 1s; animation-duration: 12s; }
+.particle-7 { top: 75%; left: 45%; animation-delay: 5s; animation-duration: 17s; }
+.particle-8 { top: 35%; left: 10%; animation-delay: 7s; animation-duration: 14s; }
+.particle-9 { top: 55%; left: 90%; animation-delay: 2.5s; animation-duration: 11s; }
+.particle-10 { top: 80%; left: 15%; animation-delay: 4.5s; animation-duration: 16s; }
+.particle-11 { top: 25%; left: 40%; animation-delay: 6.5s; animation-duration: 13s; }
+.particle-12 { top: 65%; left: 60%; animation-delay: 1.5s; animation-duration: 15s; }
+.particle-13 { top: 40%; left: 30%; animation-delay: 3.5s; animation-duration: 12s; }
+.particle-14 { top: 85%; left: 70%; animation-delay: 5.5s; animation-duration: 17s; }
+.particle-15 { top: 50%; left: 5%; animation-delay: 7.5s; animation-duration: 14s; }
 
 @keyframes particle-float {
   0%, 100% { opacity: 0; transform: translateY(0px) scale(1); }
@@ -734,6 +1041,162 @@ onMounted(() => {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ========================================
+   FIREWORKS ANIMATION
+   ======================================== */
+.firework {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  animation: firework-explode 1.5s ease-out forwards;
+}
+
+@keyframes firework-explode {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+}
+
+/* Create multiple firework particles */
+.fireworks-container::before,
+.fireworks-container::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: firework-particle 1s ease-out infinite;
+}
+
+.fireworks-container::before {
+  background: #ff6b6b;
+  top: 20%;
+  left: 30%;
+  box-shadow: 0 0 20px #ff6b6b, 0 0 40px #ff6b6b;
+}
+
+.fireworks-container::after {
+  background: #4ecdc4;
+  top: 40%;
+  right: 25%;
+  animation-delay: 0.5s;
+  box-shadow: 0 0 20px #4ecdc4, 0 0 40px #4ecdc4;
+}
+
+/* Additional firework bursts */
+.fireworks-container .firework {
+  position: absolute;
+  animation: firework-burst 1.2s ease-out forwards;
+}
+
+.fireworks-container .firework:nth-child(1) {
+  top: 15%;
+  left: 20%;
+  background: #ffd93d;
+  box-shadow: 0 0 30px #ffd93d, 0 0 60px #ffd93d;
+  animation-delay: 0.1s;
+}
+
+.fireworks-container .firework:nth-child(2) {
+  top: 60%;
+  right: 15%;
+  background: #6bcb77;
+  box-shadow: 0 0 30px #6bcb77, 0 0 60px #6bcb77;
+  animation-delay: 0.3s;
+}
+
+.fireworks-container .firework:nth-child(3) {
+  bottom: 20%;
+  left: 40%;
+  background: #4d96ff;
+  box-shadow: 0 0 30px #4d96ff, 0 0 60px #4d96ff;
+  animation-delay: 0.5s;
+}
+
+.fireworks-container .firework:nth-child(4) {
+  top: 30%;
+  right: 40%;
+  background: #ff6b6b;
+  box-shadow: 0 0 30px #ff6b6b, 0 0 60px #ff6b6b;
+  animation-delay: 0.7s;
+}
+
+.fireworks-container .firework:nth-child(5) {
+  bottom: 40%;
+  right: 30%;
+  background: #ffd93d;
+  box-shadow: 0 0 30px #ffd93d, 0 0 60px #ffd93d;
+  animation-delay: 0.9s;
+}
+
+@keyframes firework-burst {
+  0% {
+    opacity: 1;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2);
+  }
+}
+
+/* Confetti effect */
+.fireworks-container .confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+.fireworks-container .confetti:nth-child(6) {
+  top: 10%;
+  left: 10%;
+  background: #ff6b6b;
+  animation-delay: 0.2s;
+}
+
+.fireworks-container .confetti:nth-child(7) {
+  top: 15%;
+  right: 15%;
+  background: #ffd93d;
+  animation-delay: 0.4s;
+}
+
+.fireworks-container .confetti:nth-child(8) {
+  bottom: 15%;
+  left: 15%;
+  background: #6bcb77;
+  animation-delay: 0.6s;
+}
+
+.fireworks-container .confetti:nth-child(9) {
+  bottom: 10%;
+  right: 10%;
+  background: #4d96ff;
+  animation-delay: 0.8s;
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotate(720deg);
   }
 }
 </style>
