@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { authClient } from '~/utils/auth-client'
+import { playSound } from '~/utils/sound'
 
 // Use Nuxt's native useFetch to ensure SSR hydration works properly and passes cookies
 const { data: session } = await useFetch('/api/auth/get-session', {
@@ -15,18 +16,23 @@ const userMenuItems = computed(() => [
   [{
     label: 'Akun',
     icon: 'i-lucide-user',
-    to: '/dashboard/account'
+    to: '/dashboard/account',
+    click: () => playSound('nav')
   },
   {
     label: 'Pengaturan',
     icon: 'i-lucide-settings',
-    to: '/dashboard/settings'
+    to: '/dashboard/settings',
+    click: () => playSound('nav')
   }],
   [{
     label: 'Keluar',
     icon: 'i-lucide-log-out',
     onSelect: handleSignOut,
-    click: handleSignOut
+    click: () => {
+      playSound('nav')
+      handleSignOut()
+    }
   }]
 ])
 </script>
@@ -65,6 +71,7 @@ const userMenuItems = computed(() => [
         color="black"
         variant="solid"
         class="rounded-full px-5"
+        @click="playSound('nav')"
       >
         Sign In
       </UButton>

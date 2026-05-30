@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { authClient } from '~/utils/auth-client'
+import { playSound } from '~/utils/sound'
 
 const { data: session } = authClient.useSession()
 </script>
@@ -9,9 +10,9 @@ const { data: session } = authClient.useSession()
     <!-- Dashboard Top Navbar -->
     <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
       <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <NuxtLink to="/dashboard" class="flex items-center space-x-2">
-          <UIcon name="i-lucide-activity" class="w-6 h-6 text-primary-500" />
-          <span class="text-xl font-bold tracking-tight">Momentum</span>
+        <NuxtLink to="/" class="flex items-center space-x-2 transition-transform hover:scale-105 active:scale-95" @click="playSound('nav')">
+          <UIcon name="i-lucide-activity" class="w-6 h-6 text-primary-500 shrink-0" />
+          <span class="hidden sm:inline text-xl font-bold tracking-tight">Momentum</span>
         </NuxtLink>
 
         <div class="flex items-center space-x-3 sm:space-x-4">
