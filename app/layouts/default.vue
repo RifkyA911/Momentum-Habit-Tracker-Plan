@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import Footer from './footer.vue';
+
+</script>
+
 <template>
   <div>
     <!-- Minimal Header for Landing Page -->
@@ -17,8 +22,6 @@
     </main>
     
     <!-- Minimal Footer -->
-    <footer class="py-10 border-t border-gray-200 dark:border-gray-800 text-center text-sm text-gray-500 mt-20">
-      <p>© {{ new Date().getFullYear() }} Momentum. Build consistency.</p>
-    </footer>
+    <Footer />
   </div>
 </template>

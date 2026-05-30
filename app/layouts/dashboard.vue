@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { authClient } from '~/utils/auth-client'
 import { playSound } from '~/utils/sound'
+import Footer from './footer.vue'
 
 const { data: session } = authClient.useSession()
 const currentStreak = useState<number | null>('currentStreak', () => null)
@@ -44,5 +45,9 @@ onMounted(async () => {
     <main class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <slot />
     </main>
+
+    <!-- Footer -->
+    <Footer />
+
   </div>
 </template>
