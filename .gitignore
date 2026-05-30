@@ -28,6 +28,3 @@ logs
 
 # log
 /log
-
-/playwright-report
-/test-results

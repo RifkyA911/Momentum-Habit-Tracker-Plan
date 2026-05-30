@@ -23,7 +23,7 @@ const handleLogin = async () => {
     if (authError) {
       error.value = authError.message || "Invalid credentials";
     } else {
-      window.location.href = "/dashboard";
+      navigateTo("/dashboard");
     }
   } catch (e: any) {
     error.value = e.message || "Something went wrong";

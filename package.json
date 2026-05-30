@@ -1,28 +1,14 @@
 {
-  "name": "momentum-habit-tracker",
-  "version": "1.0.0",
-  "description": "A calm, dopamine-aware behavioral reflection system and habit tracker.",
-  "author": "RifkyA911",
+  "name": "momentum_habit_tracker_plan",
   "private": true,
   "type": "module",
-  "keywords": [
-    "nuxt4",
-    "vue3",
-    "habit-tracker",
-    "behavioral-analytics",
-    "momentum",
-    "neon-postgres",
-    "drizzle-orm",
-    "tailwind-css"
-  ],
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck",
-    "mcp:server": "tsx server/mcp/index.ts"
+    "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@better-fetch/fetch": "^1.1.21",
@@ -37,14 +23,11 @@
     "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.4.0",
-    "@modelcontextprotocol/sdk": "^1.29.0",
     "@nuxt/eslint": "^1.15.2",
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.1",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.4.0",
-    "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vue-tsc": "^3.3.0"
   },
