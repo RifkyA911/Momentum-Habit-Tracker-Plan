@@ -111,7 +111,7 @@ Limit tasks to 3-5 specific, actionable items.`
           content: body.message || 'Give me a short tip for staying consistent.'
         }
       ],
-      model: 'llama3-8b-8192',
+      model: 'llama-3.1-8b-instant',
       temperature: 0.7,
       max_tokens: 150
     })
