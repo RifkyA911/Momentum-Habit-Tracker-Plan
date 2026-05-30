@@ -84,20 +84,20 @@ const fetchHabits = async () => {
   try {
     const h = await $fetch<any[]>('/api/habits')
 
-    // For each habit, fetch its tasks (max 20 per habit)
+    // For each habit, fetch its tasks
     for (const habit of h) {
-      habit.tasks = (await $fetch(`/api/habits/${habit.id}/tasks`)).slice(0, 20)
+      habit.tasks = await $fetch(`/api/habits/${habit.id}/tasks`)
     }
 
-    // Limit habits to max 10
-    habits.value = h.slice(0, 10)
+    habits.value = h
 
-    // Calculate heatmap data from completed tasks
+    // Calculate heatmap data from ALL tasks
     const counts: Record<string, number> = {}
     habits.value.forEach(habit => {
       habit.tasks.forEach((task: any) => {
         if (task.completed && task.completedAt) {
-          const date = new Date(task.completedAt).toISOString().split('T')[0]
+          const d = new Date(task.completedAt)
+          const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
           counts[date] = (counts[date] || 0) + 1
         }
       })
@@ -643,7 +643,7 @@ onMounted(() => {
                     color="blue" 
                     variant="solid" 
                     size="lg"
-                    class="w-full justify-center rounded-xl py-3 group/btn relative overflow-hidden mt-auto"
+                    class="w-full justify-center rounded-xl py-3 group/btn relative overflow-hidden mt-auto bg-cyan-500! hover:bg-cyan-600! text-white! dark:text-black!"
                     @click="fetchDailySuggestion"
                   >
                     <span class="relative z-10 flex items-center gap-2">
@@ -1017,7 +1017,7 @@ onMounted(() => {
                     color="blue"
                     variant="solid"
                     size="lg"
-                    class="rounded-xl flex-1 justify-center py-3"
+                    class="rounded-xl flex-1 justify-center py-3 !bg-cyan-500 hover:!bg-cyan-600"
                     @click="isTipModalOpen = false"
                   >
                     Got It
