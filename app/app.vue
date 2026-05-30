@@ -44,7 +44,7 @@ const colors = ['bg-primary-500/30', 'bg-purple-500/30', 'bg-pink-500/30', 'bg-b
   </div>
 
   <UApp>
-    <div class="min-h-screen bg-[#F7F8FA] dark:bg-[#020617] text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-500/30">
+    <div v-if="!isAppLoading" class="min-h-screen bg-[#F7F8FA] dark:bg-[#020617] text-gray-900 dark:text-gray-100 font-sans selection:bg-primary-500/30">
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
