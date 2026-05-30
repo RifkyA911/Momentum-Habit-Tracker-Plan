@@ -660,9 +660,11 @@ onMounted(() => {
         </div>
       </div>
 
+      <hr class="my-8 border-gray-200 dark:border-gray-800" />
+
       <!-- Section: Your Habits -->
       <div class="animate-fade-up stagger-3 space-y-6">
-        <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center justify-between mb-4">
           <div>
             <h2 class="text-2xl font-bold flex items-center gap-2">
               <UIcon name="i-lucide-layers" class="w-6 h-6 text-primary-500" />
@@ -757,6 +759,8 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+      <hr class="my-8 border-gray-200 dark:border-gray-800" />
 
       <!-- Section: Momentum Stats -->
       <div class="animate-fade-up stagger-4 space-y-6">
@@ -855,6 +859,10 @@ onMounted(() => {
 
       <!-- Section: History Tracker -->
       <div class="animate-fade-up stagger-6 space-y-6">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <UIcon name="i-lucide-calendar-check" class="w-6 h-6 text-primary-500" />
+          <span>Your History</span>
+        </h2>
         <HistoryTracker :habits="habits" @refresh="fetchHabits" />
       </div>
 
