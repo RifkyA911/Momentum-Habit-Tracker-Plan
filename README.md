@@ -72,12 +72,6 @@
 - **Flat design hills** at bottom for visual appeal
 - Appears on first app load before theme is ready
 
-### 📝 Footer Component
-- **Author attribution** with link to GitHub profile
-- **Repository link** for quick access to source code
-- **Brand logo** with tagline
-- Responsive design for mobile and desktop
-
 ---
 
 ## 🛠️ Tech Stack
