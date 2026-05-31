@@ -24,6 +24,7 @@ export default defineNuxtConfig({
     googleClientId: process.env.GOOGLE_CLIENT_ID,
     googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
     databaseUrl: process.env.DATABASE_URL,
+    resendApiKey: process.env.RESEND_API_KEY,
     public: {
       authorizedUserId: process.env.AUTHORIZED_USER_ID,
     }
