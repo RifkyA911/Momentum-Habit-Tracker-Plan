@@ -1,7 +1,8 @@
-import { eq } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 import { db } from '../../../utils/db'
-import { habitTask, habit } from '../../../db/schema'
+import { habitTask, habit, habitTaskCompletion } from '../../../db/schema'
 import { auth } from '../../../utils/auth'
+import { nanoid } from 'nanoid'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     .where(eq(habitTask.id, taskId))
     .limit(1)
 
-  if (!taskRow.length || taskRow[0].habitUserId !== session.user.id) {
+  if (!taskRow?.length || taskRow[0]?.habitUserId !== session.user.id) {
     throw createError({
       statusCode: 404,
       message: 'Task not found'
@@ -42,21 +43,44 @@ export default defineEventHandler(async (event) => {
   if (method === 'PATCH') {
     const body = await readBody(event)
 
-    const updated = await db.update(habitTask)
-      .set({
-        ...(body.text !== undefined && { text: body.text }),
-        ...(body.completed !== undefined && { 
-          completed: body.completed,
-          completedAt: body.completed 
-            ? (body.completedAt ? new Date(body.completedAt) : new Date()) 
-            : null 
-        }),
-        updatedAt: new Date()
-      })
-      .where(eq(habitTask.id, taskId))
-      .returning()
+    // Update task text if provided
+    if (body.text !== undefined) {
+      const updated = await db.update(habitTask)
+        .set({ text: body.text })
+        .where(eq(habitTask.id, taskId))
+        .returning()
+      return updated[0]
+    }
 
-    return updated[0]
+    // Handle completion status
+    if (body.completed !== undefined) {
+      const today = new Date().toISOString().split('T')[0]!
+      
+      if (body.completed) {
+        // Insert completion record for today
+        await db.insert(habitTaskCompletion).values({
+          id: nanoid(),
+          taskId,
+          userId: session.user.id,
+          date: today,
+          completedAt: new Date()
+        } as any)
+      } else {
+        // Delete completion record for today
+        await db.delete(habitTaskCompletion)
+          .where(and(
+            eq(habitTaskCompletion.taskId, taskId),
+            eq(habitTaskCompletion.userId, session.user.id!),
+            eq(habitTaskCompletion.date, today)
+          ))
+      }
+      
+      // Return the task with completion status
+      const task = await db.select().from(habitTask).where(eq(habitTask.id, taskId)).limit(1)
+      return task[0]
+    }
+
+    return { success: true }
   }
 
   if (method === 'DELETE') {
