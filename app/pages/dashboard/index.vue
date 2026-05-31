@@ -90,21 +90,12 @@ const dragOverHabitIndex = ref<number | null>(null)
 
 const fetchHabits = async () => {
   try {
-    const h = await $fetch<any[]>('/api/habits')
+    const data = await $fetch<{ habits: any[], completions: any[] }>('/api/habits/with-data')
+    habits.value = data.habits
 
-    // For each habit, fetch its tasks
-    for (const habit of h) {
-      habit.tasks = await $fetch(`/api/habits/${habit.id}/tasks`)
-    }
-
-    habits.value = h
-
-    // Fetch all completions for heatmap
-    const completions = await $fetch<any[]>('/api/habits/tasks/completions')
-    
     // Calculate heatmap data from completions
     const counts: Record<string, number> = {}
-    completions.forEach((completion: any) => {
+    data.completions.forEach((completion: any) => {
       const d = new Date(completion.completedAt)
       const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
       counts[date] = (counts[date] || 0) + 1
