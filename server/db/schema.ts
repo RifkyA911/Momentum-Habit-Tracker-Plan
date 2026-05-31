@@ -62,10 +62,16 @@ export const habitTask = pgTable("habitTask", {
 	id: text("id").primaryKey(),
 	habitId: text("habitId").notNull().references(() => habit.id, { onDelete: 'cascade' }),
 	text: text("text").notNull(),
-	completed: boolean("completed").notNull().default(false),
-	completedAt: timestamp("completedAt"),
 	orderIndex: integer("orderIndex").default(0),
 	createdAt: timestamp("createdAt").notNull().defaultNow()
+});
+
+export const habitTaskCompletion = pgTable("habitTaskCompletion", {
+	id: text("id").primaryKey(),
+	taskId: text("taskId").notNull().references(() => habitTask.id, { onDelete: 'cascade' }),
+	userId: text("userId").notNull().references(() => user.id, { onDelete: 'cascade' }),
+	date: text("date").notNull(), // Format: YYYY-MM-DD
+	completedAt: timestamp("completedAt").notNull().defaultNow()
 });
 
 export const habitLog = pgTable("habitLog", {

@@ -74,28 +74,53 @@ async function main() {
 
   console.log(`Created ${insertedHabits.length} habits.`)
 
-  // 3. Generate 5 tasks per habit
-  console.log("Generating tasks...")
+  // 3. Generate 5 tasks per habit (templates, no completion state)
+  console.log("Generating task templates...")
   let taskCount = 0
 
   for (const habit of insertedHabits) {
     for (let i = 0; i < 5; i++) {
       const taskId = faker.string.uuid()
-      const isCompleted = Math.random() > 0.3
       await db.insert(schema.habitTask).values({
         id: taskId,
         habitId: habit!.id,
         text: `Task ${i + 1} for ${habit!.title}`,
-        completed: isCompleted,
-        completedAt: isCompleted ? new Date(Date.now() - Math.floor(Math.random() * 7) * 24 * 60 * 60 * 1000) : null,
         orderIndex: i,
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+        createdAt: new Date()
       })
       taskCount++
     }
   }
 
-  console.log(`Seeded ${taskCount} tasks across habits.`)
+  console.log(`Seeded ${taskCount} task templates across habits.`)
+
+  // 4. Generate some sample completions for the last 7 days
+  console.log("Generating sample task completions...")
+  let completionCount = 0
+
+  const tasks = await db.select({ id: schema.habitTask.id, habitId: schema.habitTask.habitId }).from(schema.habitTask)
+  
+  for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    const targetDate = new Date()
+    targetDate.setDate(targetDate.getDate() - dayOffset)
+    const dateStr = targetDate.toISOString().split('T')[0]
+    
+    // Complete 2-3 random tasks per day
+    const tasksToComplete = tasks.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * 2) + 2)
+    
+    for (const task of tasksToComplete) {
+      await db.insert(schema.habitTaskCompletion).values({
+        id: faker.string.uuid(),
+        taskId: task.id,
+        userId: testUser!.id,
+        date: dateStr,
+        completedAt: targetDate
+      } as any)
+      completionCount++
+    }
+  }
+
+  console.log(`Seeded ${completionCount} task completions.`)
 
   // 5. Seed feedback data
   console.log("Seeding feedback data...")
