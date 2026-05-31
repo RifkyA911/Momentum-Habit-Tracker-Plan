@@ -1,6 +1,6 @@
 import { eq, and, sql, desc, count } from 'drizzle-orm'
 import { db } from '../utils/db'
-import { habit, habitTask } from '../db/schema'
+import { habit, habitTask, habitTaskCompletion } from '../db/schema'
 import { auth } from '../utils/auth'
 
 export default defineEventHandler(async (event) => {
@@ -20,20 +20,21 @@ export default defineEventHandler(async (event) => {
   console.log('Using user ID:', effectiveUserId)
 
   try {
-    // Calculate best streak
+    // Calculate best streak using habitTaskCompletion table
     const completedTasks = await db
       .select({
-        date: sql<string>`DATE(${habitTask.completedAt})`.as('date'),
+        date: habitTaskCompletion.date,
       })
-      .from(habitTask)
+      .from(habitTaskCompletion)
+      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTask.completed, true)
+          eq(habitTaskCompletion.userId, effectiveUserId)
         )
       )
-      .orderBy(sql`DATE(${habitTask.completedAt}) DESC`)
+      .orderBy(desc(habitTaskCompletion.date))
 
     console.log('Completed tasks count:', completedTasks.length)
     console.log('Sample completed tasks:', completedTasks.slice(0, 3))
@@ -64,11 +65,12 @@ export default defineEventHandler(async (event) => {
     }
     bestStreak = Math.max(bestStreak, currentStreak)
 
-    // Calculate completion rate (last 30 days)
+    // Calculate completion rate (last 30 days) using habitTaskCompletion
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString()
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
 
+    // Get total unique tasks created in last 30 days
     const totalTasksLast30Days = await db
       .select({ count: count() })
       .from(habitTask)
@@ -76,19 +78,21 @@ export default defineEventHandler(async (event) => {
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          sql`${habitTask.createdAt} >= ${thirtyDaysAgoISO}::timestamp`
+          sql`${habitTask.createdAt} >= ${thirtyDaysAgo.toISOString()}::timestamp`
         )
       )
 
+    // Get total completions in last 30 days
     const completedTasksLast30Days = await db
       .select({ count: count() })
-      .from(habitTask)
+      .from(habitTaskCompletion)
+      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTask.completed, true),
-          sql`${habitTask.completedAt} >= ${thirtyDaysAgoISO}::timestamp`
+          eq(habitTaskCompletion.userId, effectiveUserId),
+          sql`${habitTaskCompletion.date} >= ${thirtyDaysAgoStr}`
         )
       )
 
@@ -98,19 +102,20 @@ export default defineEventHandler(async (event) => {
       ? Math.round((completedTasksCount / totalTasksCount) * 100)
       : 0
 
-    // Find most consistent habit
+    // Find most consistent habit using habitTaskCompletion
     const habitStats = await db
       .select({
         habitId: habitTask.habitId,
         habitTitle: habit.title,
         completedCount: sql<number>`count(*)`.as('completedCount'),
       })
-      .from(habitTask)
+      .from(habitTaskCompletion)
+      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTask.completed, true)
+          eq(habitTaskCompletion.userId, effectiveUserId)
         )
       )
       .groupBy(habitTask.habitId, habit.title)
@@ -119,21 +124,22 @@ export default defineEventHandler(async (event) => {
 
     const mostConsistent = habitStats.length > 0 && habitStats[0] ? habitStats[0].habitTitle : 'N/A'
 
-    // Find peak time
+    // Find peak time using habitTaskCompletion
     const timeStats = await db
       .select({
-        hour: sql<number>`EXTRACT(HOUR FROM ${habitTask.completedAt})`.as('hour'),
+        hour: sql<number>`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt})`.as('hour'),
         count: sql<number>`count(*)`.as('count'),
       })
-      .from(habitTask)
+      .from(habitTaskCompletion)
+      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTask.completed, true)
+          eq(habitTaskCompletion.userId, effectiveUserId)
         )
       )
-      .groupBy(sql`EXTRACT(HOUR FROM ${habitTask.completedAt})`)
+      .groupBy(sql`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt})`)
       .orderBy(sql`count(*) DESC`)
       .limit(1)
 
