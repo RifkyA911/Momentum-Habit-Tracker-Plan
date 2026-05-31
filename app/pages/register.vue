@@ -22,7 +22,7 @@ const handleRegister = async () => {
     if (authError) {
       error.value = authError.message || 'Registration failed'
     } else {
-      navigateTo('/dashboard')
+      navigateTo('/login')
     }
   } catch (e: any) {
     error.value = e.message || 'Something went wrong'
@@ -146,8 +146,9 @@ const handleGoogleSignup = async () => {
               {{ error }}
             </div>
 
-            <form class="space-y-5" @submit.prevent="handleRegister">
-              <UFormGroup label="Full Name">
+            <form class="space-y-6" @submit.prevent="handleRegister">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-white/80">Full Name</label>
                 <UInput
                   v-model="name"
                   type="text"
@@ -155,14 +156,17 @@ const handleGoogleSignup = async () => {
                   placeholder="John Doe"
                   color="white"
                   variant="outline"
+                  class="w-full"
                   :ui="{
                     rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
+                    wrapper: 'w-full'
                   }"
                 />
-              </UFormGroup>
+              </div>
 
-              <UFormGroup label="Email">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-white/80">Email Address</label>
                 <UInput
                   v-model="email"
                   type="email"
@@ -170,14 +174,17 @@ const handleGoogleSignup = async () => {
                   placeholder="hello@example.com"
                   color="white"
                   variant="outline"
+                  class="w-full"
                   :ui="{
                     rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
+                    wrapper: 'w-full'
                   }"
                 />
-              </UFormGroup>
+              </div>
 
-              <UFormGroup label="Password">
+              <div class="space-y-2">
+                <label class="text-sm font-medium text-white/80">Password</label>
                 <UInput
                   v-model="password"
                   type="password"
@@ -185,12 +192,15 @@ const handleGoogleSignup = async () => {
                   placeholder="••••••••"
                   color="white"
                   variant="outline"
+                  class="w-full"
                   :ui="{
                     rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25'
+                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
+                    wrapper: 'w-full'
                   }"
                 />
-              </UFormGroup>
+                <p class="text-xs text-white/30">Must be at least 8 characters</p>
+              </div>
 
               <UButton
                 type="submit"
@@ -198,7 +208,7 @@ const handleGoogleSignup = async () => {
                 size="xl"
                 color="primary"
                 :loading="loading"
-                class="mt-2 rounded-2xl h-14 text-base font-medium"
+                class="mt-4 rounded-2xl h-14 text-base font-semibold"
               >
                 Create Account
               </UButton>

@@ -13,6 +13,14 @@ const isCreateModalOpen = ref(false)
 const isMagicModalOpen = ref(false)
 const magicPrompt = ref('')
 const isGeneratingMagic = ref(false)
+const magicError = ref<string | null>(null)
+const magicSuggestions = [
+  "I want to become a morning person and start exercising before work",
+  "I need to read more books and learn new skills consistently",
+  "I want to meditate daily to reduce stress and improve focus",
+  "I need to drink more water and stay hydrated throughout the day",
+  "I want to practice gratitude and journal every evening"
+]
 const modalMode = ref<'create' | 'edit'>('create')
 const editingHabit = ref<any>(null)
 const isSubmittingHabit = ref(false)
@@ -91,16 +99,15 @@ const fetchHabits = async () => {
 
     habits.value = h
 
-    // Calculate heatmap data from ALL tasks
+    // Fetch all completions for heatmap
+    const completions = await $fetch<any[]>('/api/habits/tasks/completions')
+    
+    // Calculate heatmap data from completions
     const counts: Record<string, number> = {}
-    habits.value.forEach(habit => {
-      habit.tasks.forEach((task: any) => {
-        if (task.completed && task.completedAt) {
-          const d = new Date(task.completedAt)
-          const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-          counts[date] = (counts[date] || 0) + 1
-        }
-      })
+    completions.forEach((completion: any) => {
+      const d = new Date(completion.completedAt)
+      const date = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+      counts[date] = (counts[date] || 0) + 1
     })
 
     heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
@@ -129,13 +136,20 @@ const openEditModal = (habit: any) => {
 const openMagicModal = () => {
   playSound('magic')
   magicPrompt.value = ''
+  magicError.value = null
   isMagicModalOpen.value = true
+}
+
+const useSuggestion = (suggestion: string) => {
+  magicPrompt.value = suggestion
+  magicError.value = null
 }
 
 const generateMagicHabit = async () => {
   if (!magicPrompt.value.trim() || isGeneratingMagic.value) return
   
   isGeneratingMagic.value = true
+  magicError.value = null
   startLoadingSound()
   try {
     const aiData = await $fetch<any>('/api/groq', {
@@ -155,10 +169,28 @@ const generateMagicHabit = async () => {
     playSound('epic_magic')
     toast.add({ title: 'Magic Habit Created! ✨', description: `${aiData.icon} ${aiData.title} is ready for you.`, color: 'purple' })
     isMagicModalOpen.value = false
-  } catch (error) {
+  } catch (error: any) {
     stopLoadingSound()
     console.error('Failed to generate magic habit:', error)
-    toast.add({ title: 'Generation Failed', description: 'AI could not create the habit. Try again.', color: 'red' })
+    
+    // Detailed error handling
+    if (error?.statusCode === 401 || error?.statusCode === 403) {
+      magicError.value = 'API authentication failed. Please check your GROQ_API_KEY in .env file.'
+    } else if (error?.statusCode === 429) {
+      magicError.value = 'API rate limit exceeded. Please try again in a few moments.'
+    } else if (error?.statusCode === 500) {
+      magicError.value = 'AI service is temporarily unavailable. Please try again later.'
+    } else if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+      magicError.value = 'Network error. Please check your internet connection.'
+    } else {
+      magicError.value = 'Failed to generate habit. You can try again or create manually.'
+    }
+    
+    toast.add({ 
+      title: 'Generation Failed', 
+      description: magicError.value, 
+      color: 'error'
+    })
   } finally {
     isGeneratingMagic.value = false
     isCreatingHabit.value = false
@@ -415,27 +447,23 @@ const openReflectionModal = async () => {
   aiReflection.value = ''
   startLoadingSound()
   try {
-    // Gather habit data from existing habits array
+    // Fetch all completions for the last 30 days
+    const completions = await $fetch<any[]>('/api/habits/tasks/completions')
+    
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-    let completedTasks: any[] = []
-    habits.value.forEach(habit => {
-      habit.tasks.forEach((task: any) => {
-        if (task.completed && task.completedAt && new Date(task.completedAt) >= thirtyDaysAgo) {
-          completedTasks.push({
-            habitTitle: habit.title,
-            text: task.text,
-            completedAt: task.completedAt
-          })
-        }
-      })
-    })
-
+    // Filter completions from last 30 days
+    const recentCompletions = completions.filter((c: any) => new Date(c.completedAt) >= thirtyDaysAgo)
+    
+    // Build habit title map
+    const habitTitleMap = new Map(habits.value.map(h => [h.id, h.title]))
+    
     // Calculate habit stats
     const habitStats: Record<string, number> = {}
-    completedTasks.forEach(task => {
-      habitStats[task.habitTitle] = (habitStats[task.habitTitle] || 0) + 1
+    recentCompletions.forEach((completion: any) => {
+      const habitTitle = habitTitleMap.get(completion.habitId) || 'Unknown'
+      habitStats[habitTitle] = (habitStats[habitTitle] || 0) + 1
     })
 
     const habitStatsArray = Object.entries(habitStats).map(([habitTitle, completedCount]) => ({
@@ -445,9 +473,9 @@ const openReflectionModal = async () => {
 
     // Calculate time patterns
     const timePatterns: Record<string, number> = {}
-    completedTasks.forEach(task => {
-      if (task.completedAt) {
-        const hour = new Date(task.completedAt).getHours()
+    recentCompletions.forEach((completion: any) => {
+      if (completion.completedAt) {
+        const hour = new Date(completion.completedAt).getHours()
         const timeSlot = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening'
         timePatterns[timeSlot] = (timePatterns[timeSlot] || 0) + 1
       }
@@ -455,16 +483,16 @@ const openReflectionModal = async () => {
 
     // Calculate day patterns
     const dayPatterns: Record<string, number> = {}
-    completedTasks.forEach(task => {
-      if (task.completedAt) {
-        const day = new Date(task.completedAt).toLocaleDateString('en-US', { weekday: 'long' })
+    recentCompletions.forEach((completion: any) => {
+      if (completion.completedAt) {
+        const day = new Date(completion.completedAt).toLocaleDateString('en-US', { weekday: 'long' })
         dayPatterns[day] = (dayPatterns[day] || 0) + 1
       }
     })
 
     const habitData = {
       totalHabits: habits.value.length,
-      totalCompletions: completedTasks.length,
+      totalCompletions: recentCompletions.length,
       habitStats: habitStatsArray,
       timePatterns,
       dayPatterns
@@ -664,7 +692,7 @@ onMounted(() => {
 
       <!-- Section: Your Habits -->
       <div class="animate-fade-up stagger-3 space-y-6">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex md:flex-row flex-col gap-4 items-start md:items-center justify-between mb-4">
           <div>
             <h2 class="text-2xl font-bold flex items-center gap-2">
               <UIcon name="i-lucide-layers" class="w-6 h-6 text-primary-500" />
@@ -1074,6 +1102,50 @@ onMounted(() => {
             </div>
 
             <form @submit.prevent="generateMagicHabit" class="space-y-6">
+              <!-- Error State -->
+              <div v-if="magicError" class="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <div class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
+                    <UIcon name="i-lucide-alert-circle" class="w-4 h-4 text-red-600 dark:text-red-400" />
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-medium text-red-800 dark:text-red-300">{{ magicError }}</p>
+                    <div class="flex gap-2 mt-3">
+                      <button
+                        type="button"
+                        @click="generateMagicHabit"
+                        class="text-xs px-3 py-1.5 rounded-lg bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                      >
+                        Try Again
+                      </button>
+                      <button
+                        type="button"
+                        @click="isMagicModalOpen = false; openCreateModal()"
+                        class="text-xs px-3 py-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        Create Manually
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Suggestion Prompts -->
+              <div v-if="!magicPrompt && !magicError" class="space-y-2">
+                <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quick Start</label>
+                <div class="flex flex-wrap gap-2">
+                  <button
+                    v-for="(suggestion, index) in magicSuggestions"
+                    :key="index"
+                    type="button"
+                    @click="useSuggestion(suggestion)"
+                    class="text-xs px-3 py-2 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/40 border border-purple-200 dark:border-purple-800 transition-all duration-200 hover:scale-105"
+                  >
+                    {{ suggestion.slice(0, 40) }}{{ suggestion.length > 40 ? '...' : '' }}
+                  </button>
+                </div>
+              </div>
+
               <div class="space-y-2">
                 <label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Your Goal or Story</label>
                 <UTextarea 
@@ -1084,10 +1156,11 @@ onMounted(() => {
                   class="w-full"
                   :ui="{ base: 'transition-all duration-300 focus:ring-2 focus:ring-purple-500/50' }"
                 />
+                <p class="text-xs text-gray-500 dark:text-gray-400">Be specific about your goals for better results ✨</p>
               </div>
               
-              <div class="flex justify-end gap-3 pt-2">
-                <UButton color="gray" variant="ghost" size="lg" class="rounded-xl px-6" @click="isMagicModalOpen = false" :disabled="isGeneratingMagic">Cancel</UButton>
+              <div class="flex md:flex-row flex-col items-center justify-center gap-3 pt-2">
+                <!-- <UButton color="neutral" variant="outline" size="lg" class="rounded-xl px-6 py-2.5" @click="isMagicModalOpen = false" :disabled="isGeneratingMagic">Cancel</UButton> -->
                 <button 
                   type="submit" 
                   class="relative group rounded-xl p-[2px] transition-all duration-300 overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"

@@ -19,11 +19,13 @@ const handleLogin = async () => {
     const { data, error: authError } = await authClient.signIn.email({
       email: email.value,
       password: password.value,
+      callbackURL: "/dashboard"
     });
     if (authError) {
       error.value = authError.message || "Invalid credentials";
     } else {
-      navigateTo("/dashboard");
+      // Force page reload to ensure session is properly set
+      window.location.href = "/dashboard";
     }
   } catch (e: any) {
     error.value = e.message || "Something went wrong";
@@ -168,12 +170,12 @@ const handleGoogleLogin = async () => {
                   }"
                 />
               </div>
-              <NuxtLink
+              <!-- <NuxtLink
                 to="/forgot-password"
                 class="text-sm text-primary-400/80 transition hover:text-primary-300"
               >
                 Forgot password?
-              </NuxtLink>
+              </NuxtLink> -->
 
               <!-- Button -->
               <UButton
