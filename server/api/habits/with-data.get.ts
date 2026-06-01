@@ -73,6 +73,18 @@ export default defineEventHandler(async (event) => {
         )
       )
 
+    // Group completions by taskId for easy lookup
+    const completionsByTask = allCompletions.reduce((acc, completion) => {
+      if (!acc[completion.taskId]) {
+        acc[completion.taskId] = []
+      }
+      acc[completion.taskId].push({
+        date: completion.date,
+        completedAt: completion.completedAt
+      })
+      return acc
+    }, {} as Record<string, { date: string, completedAt: Date }[]>)
+
     // Group tasks by habitId and add completion status
     const tasksByHabit = allTasks.reduce((acc, task) => {
       const habitId = task.habitId!
@@ -96,7 +108,8 @@ export default defineEventHandler(async (event) => {
 
     return {
       habits: habitsWithTasks,
-      completions: allCompletions
+      completions: allCompletions,
+      completionsByTask
     }
   } catch (error: any) {
     console.error('Error fetching habits with data:', error)

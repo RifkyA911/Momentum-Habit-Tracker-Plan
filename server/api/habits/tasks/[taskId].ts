@@ -54,24 +54,24 @@ export default defineEventHandler(async (event) => {
 
     // Handle completion status
     if (body.completed !== undefined) {
-      const today = new Date().toISOString().split('T')[0]!
+      const date = body.date || new Date().toISOString().split('T')[0]!
       
       if (body.completed) {
-        // Insert completion record for today
+        // Insert completion record for the specified date
         await db.insert(habitTaskCompletion).values({
           id: nanoid(),
           taskId,
           userId: session.user.id,
-          date: today,
+          date: date,
           completedAt: new Date()
         } as any)
       } else {
-        // Delete completion record for today
+        // Delete completion record for the specified date
         await db.delete(habitTaskCompletion)
           .where(and(
             eq(habitTaskCompletion.taskId, taskId),
             eq(habitTaskCompletion.userId, session.user.id!),
-            eq(habitTaskCompletion.date, today)
+            eq(habitTaskCompletion.date, date)
           ))
       }
       

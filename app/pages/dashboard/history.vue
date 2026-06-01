@@ -5,6 +5,7 @@ definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const toast = useToast()
 const habits = ref<any[]>([])
+const completionsByTask = ref<Record<string, any[]>>({})
 const isFetching = ref(true)
 const daysLoaded = ref(10)
 const observerTarget = ref<HTMLElement | null>(null)
@@ -13,11 +14,9 @@ let observer: IntersectionObserver | null = null
 const fetchHabits = async () => {
   isFetching.value = true
   try {
-    const h = await $fetch<any[]>('/api/habits')
-    for (const habit of h) {
-      habit.tasks = await $fetch(`/api/habits/${habit.id}/tasks`)
-    }
-    habits.value = h
+    const data = await $fetch<{ habits: any[], completionsByTask: Record<string, any[]> }>('/api/habits/with-data')
+    habits.value = data.habits
+    completionsByTask.value = data.completionsByTask
   } catch (err) {
     console.error('Failed to load history', err)
     toast.add({ title: 'Error', description: 'Could not load history data', color: 'red' })
@@ -34,17 +33,22 @@ const isSameDay = (d1Str: string, d2Str: string) => {
   return date1 === date2
 }
 
+// Check if task was completed on a specific date using completionsByTask
+const isTaskCompletedOnDate = (taskId: string, dateStr: string) => {
+  const completions = completionsByTask.value[taskId] || []
+  return completions.some((c: any) => c.date === dateStr)
+}
+
 const getTasksForDate = (habit: any, dateStr: string) => {
   const tasks = habit.tasks || []
   return tasks.filter((t: any) => {
-    const isCompleted = t.completed && t.completedAt
-    const completedOnThisDay = isCompleted && isSameDay(t.completedAt, dateStr)
+    const isCompleted = isTaskCompletedOnDate(t.id, dateStr)
     const active = !t.completed
-    
+
     const createdTime = new Date(t.createdAt).getTime()
     const dayEndTime = new Date(dateStr + 'T23:59:59').getTime()
-    
-    return (active || completedOnThisDay) && (createdTime <= dayEndTime)
+
+    return (active || isCompleted) && (createdTime <= dayEndTime)
   })
 }
 
@@ -65,7 +69,7 @@ const historyDays = computed(() => {
       const dayTasks = getTasksForDate(habit, dateStr)
       dayTasks.forEach((t: any) => {
         totalTasks++
-        if (t.completedAt && isSameDay(t.completedAt, dateStr)) {
+        if (isTaskCompletedOnDate(t.id, dateStr)) {
           completedTasks++
         }
       })
@@ -95,31 +99,25 @@ const loadMore = () => {
 }
 
 const toggleTaskOnDate = async (task: any, dateStr: string) => {
-  const wasCompleted = task.completedAt && isSameDay(task.completedAt, dateStr)
-  
-  // Optimistic update locally
-  task.completedAt = wasCompleted ? null : new Date(dateStr + 'T12:00:00').toISOString()
-  task.completed = !wasCompleted
+  const wasCompleted = isTaskCompletedOnDate(task.id, dateStr)
 
   try {
     if (wasCompleted) {
       await $fetch(`/api/habits/tasks/${task.id}`, {
         method: 'PATCH',
-        body: { completed: false }
+        body: { completed: false, date: dateStr }
       })
     } else {
       await $fetch(`/api/habits/tasks/${task.id}`, {
         method: 'PATCH',
         body: {
           completed: true,
-          completedAt: new Date(dateStr + 'T12:00:00').toISOString()
+          date: dateStr
         }
       })
     }
+    await fetchHabits()
   } catch (err) {
-    // revert
-    task.completedAt = wasCompleted ? new Date(dateStr + 'T12:00:00').toISOString() : null
-    task.completed = wasCompleted
     toast.add({ title: 'Update failed', description: 'Unable to update task.', color: 'red' })
   }
 }
@@ -215,19 +213,19 @@ onUnmounted(() => {
                 >
                   <div
                     class="shrink-0 w-4 h-4 rounded mt-0.5 border-2 flex items-center justify-center transition-all opacity-80"
-                    :style="task.completedAt && isSameDay(task.completedAt, day.dateStr)
+                    :style="isTaskCompletedOnDate(task.id, day.dateStr)
                       ? { backgroundColor: habit.color, borderColor: habit.color } 
                       : { borderColor: 'currentColor' }"
-                    :class="!(task.completedAt && isSameDay(task.completedAt, day.dateStr)) 
+                    :class="!isTaskCompletedOnDate(task.id, day.dateStr) 
                       ? 'text-gray-300 dark:text-gray-600' 
                       : 'text-white'"
                   >
-                    <UIcon v-if="task.completedAt && isSameDay(task.completedAt, day.dateStr)" name="i-lucide-check" class="w-3 h-3" />
+                    <UIcon v-if="isTaskCompletedOnDate(task.id, day.dateStr)" name="i-lucide-check" class="w-3 h-3" />
                   </div>
 
                   <span 
                     class="text-sm transition-colors leading-tight line-clamp-2"
-                    :class="task.completedAt && isSameDay(task.completedAt, day.dateStr)
+                    :class="isTaskCompletedOnDate(task.id, day.dateStr)
                       ? 'line-through text-gray-400' 
                       : 'text-gray-700 dark:text-gray-300'"
                   >

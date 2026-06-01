@@ -31,10 +31,12 @@ const grid = computed(() => {
   const actualStart = new Date(startDate)
   actualStart.setDate(actualStart.getDate() - startDay)
 
-  // Pad end to next Saturday
+  // Pad end to next Saturday, but only for past years (not current year)
   const endDay = endDate.getDay()
   const actualEnd = new Date(endDate)
-  if (endDay < 6) actualEnd.setDate(actualEnd.getDate() + (6 - endDay))
+  if (!isCurrentYear && endDay < 6) {
+    actualEnd.setDate(actualEnd.getDate() + (6 - endDay))
+  }
 
   const days: { date: string; count: number; dayOfWeek: number; jsDate: Date }[] = []
   const cursor = new Date(actualStart)

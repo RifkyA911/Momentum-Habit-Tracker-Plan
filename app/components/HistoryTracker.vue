@@ -4,6 +4,7 @@ import { playSound } from '~/utils/sound'
 
 const props = defineProps<{
   habits: any[]
+  completionsByTask: Record<string, any[]>
 }>()
 
 const emit = defineEmits(['refresh'])
@@ -20,18 +21,30 @@ const isSameDay = (d1Str: string, d2Str: string) => {
   return date1 === date2
 }
 
+// Check if task was completed on a specific date using completionsByTask
+const isTaskCompletedOnDate = (taskId: string, dateStr: string) => {
+  const completions = props.completionsByTask[taskId] || []
+  return completions.some((c: any) => c.date === dateStr)
+}
+
+// Get completedAt for a task on a specific date
+const getCompletedAtForDate = (taskId: string, dateStr: string) => {
+  const completions = props.completionsByTask[taskId] || []
+  const completion = completions.find((c: any) => c.date === dateStr)
+  return completion?.completedAt || null
+}
+
 // Get relevant tasks for a specific date
 const getTasksForDate = (habit: any, dateStr: string) => {
   const tasks = habit.tasks || []
   return tasks.filter((t: any) => {
-    const isCompleted = t.completed && t.completedAt
-    const completedOnThisDay = isCompleted && isSameDay(t.completedAt, dateStr)
+    const isCompleted = isTaskCompletedOnDate(t.id, dateStr)
     const active = !t.completed
 
     const createdTime = new Date(t.createdAt).getTime()
     const dayEndTime = new Date(dateStr + 'T23:59:59').getTime()
 
-    return (active || completedOnThisDay) && (createdTime <= dayEndTime)
+    return (active || isCompleted) && (createdTime <= dayEndTime)
   })
 }
 
@@ -53,7 +66,7 @@ const recentDays = computed(() => {
       const dayTasks = getTasksForDate(habit, dateStr)
       dayTasks.forEach((t: any) => {
         totalTasks++
-        if (t.completedAt && isSameDay(t.completedAt, dateStr)) {
+        if (isTaskCompletedOnDate(t.id, dateStr)) {
           completedTasks++
         }
       })
@@ -82,23 +95,23 @@ const togglingTaskIds = ref<string[]>([])
 
 const toggleTaskOnDate = async (task: any) => {
   const dateStr = selectedDate.value
-  const wasCompleted = task.completedAt && isSameDay(task.completedAt, dateStr)
+  const wasCompleted = isTaskCompletedOnDate(task.id, dateStr)
   try {
     if (wasCompleted) {
-      // Uncheck
+      // Uncheck - delete completion record for this date
       togglingTaskIds.value.push(task.id)
       await $fetch(`/api/habits/tasks/${task.id}`, {
         method: 'PATCH',
-        body: { completed: false }
+        body: { completed: false, date: dateStr }
       })
     } else {
-      // Check
+      // Check - add completion record for this date
       togglingTaskIds.value.push(task.id)
       await $fetch(`/api/habits/tasks/${task.id}`, {
         method: 'PATCH',
         body: {
           completed: true,
-          completedAt: new Date(dateStr + 'T12:00:00')
+          date: dateStr
         }
       })
     }
@@ -196,19 +209,19 @@ const toggleTaskOnDate = async (task: any) => {
               class="flex items-center gap-3 py-1.5 px-2 rounded-xl hover:bg-gray-100/50 dark:hover:bg-white/[0.02] transition-colors">
               <!-- Checkbox -->
               <button @click="toggleTaskOnDate(task)"
-                class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all" :style="task.completedAt && isSameDay(task.completedAt, selectedDate)
+                class="shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all" :style="isTaskCompletedOnDate(task.id, selectedDate)
                   ? { backgroundColor: habit.color, borderColor: habit.color }
-                  : { borderColor: 'currentColor' }" :disabled="togglingTaskIds.includes(task.id)" :class="!(task.completedAt && isSameDay(task.completedAt, selectedDate))
+                  : { borderColor: 'currentColor' }" :disabled="togglingTaskIds.includes(task.id)" :class="!isTaskCompletedOnDate(task.id, selectedDate)
                     ? 'text-gray-300 dark:text-gray-600 hover:text-gray-400'
                     : 'text-white'">
                 <UIcon v-if="togglingTaskIds.includes(task.id)" name="i-lucide-loader-2"
                   class="w-3 h-3 text-primary-500 animate-spin" />
-                <UIcon v-else-if="task.completedAt && isSameDay(task.completedAt, selectedDate)" name="i-lucide-check"
+                <UIcon v-else-if="isTaskCompletedOnDate(task.id, selectedDate)" name="i-lucide-check"
                   class="w-3 h-3" />
               </button>
 
               <!-- Text -->
-              <span class="text-sm transition-colors" :class="task.completedAt && isSameDay(task.completedAt, selectedDate)
+              <span class="text-sm transition-colors" :class="isTaskCompletedOnDate(task.id, selectedDate)
                 ? 'line-through text-gray-400'
                 : 'text-gray-700 dark:text-gray-300'">
                 {{ task.text }}

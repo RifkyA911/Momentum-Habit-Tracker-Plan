@@ -124,10 +124,10 @@ export default defineEventHandler(async (event) => {
 
     const mostConsistent = habitStats.length > 0 && habitStats[0] ? habitStats[0].habitTitle : 'N/A'
 
-    // Find peak time using habitTaskCompletion
+    // Find peak time using habitTaskCompletion - convert to UTC for consistent display
     const timeStats = await db
       .select({
-        hour: sql<number>`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt})`.as('hour'),
+        hour: sql<number>`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt} AT TIME ZONE 'UTC')`.as('hour'),
         count: sql<number>`count(*)`.as('count'),
       })
       .from(habitTaskCompletion)
@@ -139,7 +139,7 @@ export default defineEventHandler(async (event) => {
           eq(habitTaskCompletion.userId, effectiveUserId)
         )
       )
-      .groupBy(sql`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt})`)
+      .groupBy(sql`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt} AT TIME ZONE 'UTC')`)
       .orderBy(sql`count(*) DESC`)
       .limit(1)
 

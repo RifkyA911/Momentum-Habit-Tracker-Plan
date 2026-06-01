@@ -27,6 +27,7 @@ const isSubmittingHabit = ref(false)
 const isCreatingHabit = ref(false)
 const newlyCreatedHabitId = ref<string | null>(null)
 const habits = ref<any[]>([])
+const completionsByTask = ref<Record<string, any[]>>({})
 const heatmapData = ref<{date: string, count: number}[]>([])
 const isLoading = ref(true)
 const isAnalyzing = ref(false)
@@ -90,8 +91,9 @@ const dragOverHabitIndex = ref<number | null>(null)
 
 const fetchHabits = async () => {
   try {
-    const data = await $fetch<{ habits: any[], completions: any[] }>('/api/habits/with-data')
+    const data = await $fetch<{ habits: any[], completions: any[], completionsByTask: Record<string, any[]> }>('/api/habits/with-data')
     habits.value = data.habits
+    completionsByTask.value = data.completionsByTask
 
     // Calculate heatmap data from completions
     const counts: Record<string, number> = {}
@@ -882,7 +884,7 @@ onMounted(() => {
           <UIcon name="i-lucide-calendar-check" class="w-6 h-6 text-primary-500" />
           <span>Your History</span>
         </h2>
-        <HistoryTracker :habits="habits" @refresh="fetchHabits" />
+        <HistoryTracker :habits="habits" :completions-by-task="completionsByTask" @refresh="fetchHabits" />
       </div>
 
     </div>
