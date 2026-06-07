@@ -17,74 +17,19 @@ export default defineEventHandler(async (event) => {
 
   const effectiveUserId = session.user.id
 
-  console.log('Using user ID:', effectiveUserId)
-
   try {
-    // Calculate best streak using habitTaskCompletion table
-    const completedTasks = await db
-      .select({
-        date: habitTaskCompletion.date,
-      })
-      .from(habitTaskCompletion)
-      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
-      .innerJoin(habit, eq(habitTask.habitId, habit.id))
-      .where(
-        and(
-          eq(habit.userId, effectiveUserId),
-          eq(habitTaskCompletion.userId, effectiveUserId)
-        )
-      )
-      .orderBy(desc(habitTaskCompletion.date))
-
-    console.log('Completed tasks count:', completedTasks.length)
-    console.log('Sample completed tasks:', completedTasks.slice(0, 3))
-
-    const uniqueDates = new Set(completedTasks.map(t => t.date))
-    const sortedDates = Array.from(uniqueDates).sort()
-
-    let bestStreak = 0
-    let currentStreak = 0
-    let previousDate: string | null = null
-
-    for (const date of sortedDates) {
-      if (!previousDate) {
-        currentStreak = 1
-      } else {
-        const prev = new Date(previousDate as string)
-        const curr = new Date(date as string)
-        const diffDays = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24))
-        
-        if (diffDays === 1) {
-          currentStreak++
-        } else {
-          bestStreak = Math.max(bestStreak, currentStreak)
-          currentStreak = 1
-        }
-      }
-      previousDate = date
-    }
-    bestStreak = Math.max(bestStreak, currentStreak)
-
-    // Calculate completion rate (last 30 days) using habitTaskCompletion
+    const today = new Date().toISOString().split('T')[0]!
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]
+    const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0]!
 
-    // Get total unique tasks created in last 30 days
-    const totalTasksLast30Days = await db
-      .select({ count: count() })
-      .from(habitTask)
-      .innerJoin(habit, eq(habitTask.habitId, habit.id))
-      .where(
-        and(
-          eq(habit.userId, effectiveUserId),
-          sql`${habitTask.createdAt} >= ${thirtyDaysAgo.toISOString()}::timestamp`
-        )
-      )
-
-    // Get total completions in last 30 days
-    const completedTasksLast30Days = await db
-      .select({ count: count() })
+    // Get all completions for the last 30 days
+    const allCompletions = await db
+      .select({
+        date: habitTaskCompletion.date,
+        habitId: habitTask.habitId,
+        taskId: habitTaskCompletion.taskId,
+      })
       .from(habitTaskCompletion)
       .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
@@ -96,36 +41,90 @@ export default defineEventHandler(async (event) => {
         )
       )
 
-    const totalTasksCount = totalTasksLast30Days[0]?.count ?? 0
-    const completedTasksCount = completedTasksLast30Days[0]?.count ?? 0
-    const completionRate = totalTasksCount > 0
-      ? Math.round((completedTasksCount / totalTasksCount) * 100)
-      : 0
-
-    // Find most consistent habit using habitTaskCompletion
-    const habitStats = await db
+    // Get all tasks that existed in the last 30 days
+    const allTasks = await db
       .select({
+        id: habitTask.id,
         habitId: habitTask.habitId,
-        habitTitle: habit.title,
-        completedCount: sql<number>`count(*)`.as('completedCount'),
+        createdAt: habitTask.createdAt,
       })
-      .from(habitTaskCompletion)
-      .innerJoin(habitTask, eq(habitTaskCompletion.taskId, habitTask.id))
+      .from(habitTask)
       .innerJoin(habit, eq(habitTask.habitId, habit.id))
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTaskCompletion.userId, effectiveUserId)
+          sql`${habitTask.createdAt} >= ${thirtyDaysAgo.toISOString()}::timestamp`
         )
       )
-      .groupBy(habitTask.habitId, habit.title)
-      .orderBy(sql`count(*) DESC`)
-      .limit(1)
 
-    const mostConsistent = habitStats.length > 0 && habitStats[0] ? habitStats[0].habitTitle : 'N/A'
+    // Calculate daily completion rates
+    const dailyStats: Record<string, { total: number, completed: number }> = {}
+    
+    // Initialize all days from 30 days ago to today
+    for (let i = 0; i < 30; i++) {
+      const d = new Date()
+      d.setDate(d.getDate() - i)
+      const dateStr = d.toISOString().split('T')[0]!
+      dailyStats[dateStr] = { total: 0, completed: 0 }
+    }
 
-    // Find peak time using habitTaskCompletion - convert to UTC for consistent display
-    const timeStats = await db
+    // Count tasks that existed on each day
+    allTasks.forEach(task => {
+      const taskDate = new Date(task.createdAt!).toISOString().split('T')[0]!
+      for (const dateStr in dailyStats) {
+        if (dateStr >= taskDate) {
+          dailyStats[dateStr]!.total++
+        }
+      }
+    })
+
+    // Count completions on each day
+    allCompletions.forEach(completion => {
+      if (dailyStats[completion.date]) {
+        dailyStats[completion.date]!.completed++
+      }
+    })
+
+    // Calculate overall completion rate (average of daily rates)
+    let totalDailyRate = 0
+    let daysWithTasks = 0
+    let perfectDays = 0
+
+    Object.values(dailyStats).forEach(day => {
+      if (day.total > 0) {
+        const rate = day.completed / day.total
+        totalDailyRate += rate
+        daysWithTasks++
+        if (rate === 1) perfectDays++
+      }
+    })
+
+    const completionRate = daysWithTasks > 0 ? Math.round((totalDailyRate / daysWithTasks) * 100) : 0
+
+    // Calculate streak (consecutive days with 100% completion)
+    const sortedDates = Object.keys(dailyStats).sort()
+    let currentStreak = 0
+    let bestStreak = 0
+
+    for (let i = sortedDates.length - 1; i >= 0; i--) {
+      const date = sortedDates[i]
+      const day = dailyStats[date]
+      if (day.total > 0 && day.completed === day.total) {
+        currentStreak++
+        bestStreak = Math.max(bestStreak, currentStreak)
+      } else {
+        currentStreak = 0
+      }
+    }
+
+    // Calculate total tasks completed
+    const totalCompleted = allCompletions.length
+
+    // Calculate average tasks per day
+    const avgTasksPerDay = daysWithTasks > 0 ? Math.round(totalCompleted / daysWithTasks) : 0
+
+    // Find most productive hour (when most tasks are completed)
+    const hourStats = await db
       .select({
         hour: sql<number>`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt} AT TIME ZONE 'UTC')`.as('hour'),
         count: sql<number>`count(*)`.as('count'),
@@ -136,26 +135,86 @@ export default defineEventHandler(async (event) => {
       .where(
         and(
           eq(habit.userId, effectiveUserId),
-          eq(habitTaskCompletion.userId, effectiveUserId)
+          eq(habitTaskCompletion.userId, effectiveUserId),
+          sql`${habitTaskCompletion.date} >= ${thirtyDaysAgoStr}`
         )
       )
       .groupBy(sql`EXTRACT(HOUR FROM ${habitTaskCompletion.completedAt} AT TIME ZONE 'UTC')`)
       .orderBy(sql`count(*) DESC`)
-      .limit(1)
 
+    // Get hour distribution for visualization
+    const hourDistribution: Record<number, number> = {}
+    for (let i = 0; i < 24; i++) {
+      hourDistribution[i] = 0
+    }
+    hourStats.forEach(h => {
+      hourDistribution[Math.floor(h.hour)] = h.count
+    })
+
+    const peakHour = hourStats.length > 0 ? Math.floor(hourStats[0].hour) : null
     let peakTime = 'N/A'
-    if (timeStats.length > 0 && timeStats[0]) {
-      const hour = Math.floor(timeStats[0].hour)
-      if (hour >= 0 && hour < 12) peakTime = `${hour} AM`
-      else if (hour === 12) peakTime = '12 PM'
-      else peakTime = `${hour - 12} PM`
+    let timeOfDay = 'N/A'
+    
+    if (peakHour !== null) {
+      if (peakHour >= 5 && peakHour < 12) {
+        timeOfDay = 'Morning'
+        peakTime = `${peakHour} AM`
+      } else if (peakHour >= 12 && peakHour < 17) {
+        timeOfDay = 'Afternoon'
+        peakTime = peakHour === 12 ? '12 PM' : `${peakHour - 12} PM`
+      } else if (peakHour >= 17 && peakHour < 21) {
+        timeOfDay = 'Evening'
+        peakTime = `${peakHour - 12} PM`
+      } else {
+        timeOfDay = 'Night'
+        peakTime = peakHour === 0 ? '12 AM' : (peakHour < 12 ? `${peakHour} AM` : `${peakHour - 12} PM`)
+      }
     }
 
+    // Calculate habit-specific completion rates
+    const habitCompletionRates = await db
+      .select({
+        habitId: habit.id,
+        habitTitle: habit.title,
+        habitIcon: habit.icon,
+        habitColor: habit.color,
+        totalTasks: sql<number>`count(distinct ${habitTask.id})`.as('totalTasks'),
+        completedTasks: sql<number>`count(distinct ${habitTaskCompletion.taskId})`.as('completedTasks'),
+      })
+      .from(habit)
+      .leftJoin(habitTask, eq(habitTask.habitId, habit.id))
+      .leftJoin(habitTaskCompletion, and(
+        eq(habitTaskCompletion.taskId, habitTask.id),
+        eq(habitTaskCompletion.userId, effectiveUserId),
+        sql`${habitTaskCompletion.date} >= ${thirtyDaysAgoStr}`
+      ))
+      .where(eq(habit.userId, effectiveUserId))
+      .groupBy(habit.id, habit.title, habit.icon, habit.color)
+
+    const habitStats = habitCompletionRates.map(h => ({
+      ...h,
+      completionRate: h.totalTasks > 0 ? Math.round((h.completedTasks / h.totalTasks) * 100) : 0
+    }))
+
+    // Find most consistent habit
+    const mostConsistent = habitStats.length > 0 
+      ? habitStats.reduce((best, current) => current.completionRate > best.completionRate ? current : best)
+      : null
+
     return {
-      bestStreak,
       completionRate,
-      mostConsistent,
-      peakTime
+      perfectDays,
+      currentStreak,
+      bestStreak,
+      totalCompleted,
+      avgTasksPerDay,
+      peakTime,
+      timeOfDay,
+      peakHour,
+      hourDistribution,
+      habitStats,
+      mostConsistent: mostConsistent?.habitTitle || 'N/A',
+      mostConsistentRate: mostConsistent?.completionRate || 0
     }
   } catch (error: any) {
     console.error('Stats error:', error)

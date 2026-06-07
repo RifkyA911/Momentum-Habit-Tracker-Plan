@@ -788,12 +788,31 @@ onMounted(() => {
         <h2 class="text-2xl font-bold flex items-center gap-2">
           <UIcon name="i-lucide-bar-chart-2" class="w-6 h-6 text-primary-500" />
           <span>Momentum Stats</span>
+          <span class="text-xs font-normal text-gray-400 bg-gray-100 dark:bg-white/5 px-2.5 py-0.5 rounded-full">Last 30 Days</span>
         </h2>
         
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <!-- Best Streak -->
+          <!-- Perfect Days -->
+          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
+              <UIcon name="i-lucide-calendar-check" class="w-32 h-32 text-emerald-500 -mt-8 -mr-8 rotate-12" />
+            </div>
+            
+            <div class="relative z-10">
+              <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-emerald-100 dark:border-emerald-500/20">
+                <UIcon name="i-lucide-calendar-check" class="w-6 h-6" />
+              </div>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Perfect Days</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.perfectDays || 0 }}</span>
+                <span class="text-sm font-semibold text-emerald-500">days</span>
+              </div>
+              <p class="text-xs text-gray-400 mt-2">Days with 100% completion</p>
+            </div>
+          </div>
+
+          <!-- Current Streak -->
           <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-orange-500/10 hover:border-orange-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <!-- Background Icon Watermark -->
             <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
               <UIcon name="i-lucide-flame" class="w-32 h-32 text-orange-500 -mt-8 -mr-8 rotate-12" />
             </div>
@@ -802,67 +821,74 @@ onMounted(() => {
               <div class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center text-orange-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-orange-100 dark:border-orange-500/20">
                 <UIcon name="i-lucide-flame" class="w-6 h-6" />
               </div>
-              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Best Streak</span>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Current Streak</span>
               <div class="flex items-baseline gap-2">
-                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.bestStreak }}</span>
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.currentStreak || 0 }}</span>
                 <span class="text-sm font-semibold text-orange-500">days</span>
               </div>
+              <p class="text-xs text-gray-400 mt-2">Best: {{ stats.bestStreak || 0 }} days</p>
             </div>
           </div>
 
-          <!-- Completion Rate -->
-          <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-green-500/10 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <!-- Background Icon Watermark -->
-            <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
-              <UIcon name="i-lucide-target" class="w-32 h-32 text-green-500 -mt-8 -mr-8 rotate-12" />
-            </div>
-            
-            <div class="relative z-10">
-              <div class="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-500/10 flex items-center justify-center text-green-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-green-100 dark:border-green-500/20">
-                <UIcon name="i-lucide-target" class="w-6 h-6" />
-              </div>
-              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Completion Rate</span>
-              <div class="flex items-baseline gap-2">
-                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.completionRate }}</span>
-                <span class="text-sm font-semibold text-green-500">%</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Most Consistent -->
+          <!-- Total Completed -->
           <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <!-- Background Icon Watermark -->
             <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
-              <UIcon name="i-lucide-award" class="w-32 h-32 text-blue-500 -mt-8 -mr-8 rotate-12" />
+              <UIcon name="i-lucide-check-circle-2" class="w-32 h-32 text-blue-500 -mt-8 -mr-8 rotate-12" />
             </div>
             
             <div class="relative z-10">
-              <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 mb-5 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-blue-100 dark:border-blue-500/20">
-                <UIcon name="i-lucide-award" class="w-6 h-6" />
+              <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center text-blue-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-blue-100 dark:border-blue-500/20">
+                <UIcon name="i-lucide-check-circle-2" class="w-6 h-6" />
               </div>
-              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Most Consistent</span>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Total Completed</span>
               <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-gray-900 dark:text-white tracking-tight line-clamp-1" :title="stats.mostConsistent">{{ stats.mostConsistent }}</span>
+                <span class="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.totalCompleted || 0 }}</span>
+                <span class="text-sm font-semibold text-blue-500">tasks</span>
               </div>
+              <p class="text-xs text-gray-400 mt-2">{{ stats.avgTasksPerDay || 0 }}/day avg</p>
             </div>
           </div>
 
-          <!-- Peak Time -->
+          <!-- Most Productive Time -->
           <div class="group relative bg-white dark:bg-[#0c1222] border border-gray-200 dark:border-white/10 p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-purple-500/10 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-            <!-- Background Icon Watermark -->
             <div class="absolute top-0 right-0 p-4 opacity-[0.03] dark:opacity-[0.02] group-hover:opacity-10 transition-opacity duration-300 pointer-events-none">
-              <UIcon name="i-lucide-clock" class="w-32 h-32 text-purple-500 -mt-8 -mr-8 rotate-12" />
+              <UIcon name="i-lucide-sun" class="w-32 h-32 text-purple-500 -mt-8 -mr-8 rotate-12" />
             </div>
             
             <div class="relative z-10">
-              <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 mb-5 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-purple-100 dark:border-purple-500/20">
-                <UIcon name="i-lucide-clock" class="w-6 h-6" />
+              <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center text-purple-500 mb-5 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-purple-100 dark:border-purple-500/20">
+                <UIcon name="i-lucide-sun" class="w-6 h-6" />
               </div>
-              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Peak Focus Time</span>
+              <span class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1.5 block uppercase tracking-wider">Most Productive</span>
               <div class="flex items-baseline gap-2">
-                <span class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.peakTime }}</span>
+                <span class="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">{{ stats.timeOfDay || 'N/A' }}</span>
+              </div>
+              <p class="text-xs text-gray-400 mt-2">{{ stats.peakTime || 'No data yet' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Habit Performance -->
+        <div class="bg-white dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 rounded-3xl p-6 shadow-sm">
+          <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Habit Performance</h3>
+          <div v-if="stats.habitStats && stats.habitStats.length > 0" class="space-y-4">
+            <div v-for="habit in stats.habitStats" :key="habit.habitId" class="flex items-center gap-4">
+              <div class="w-10 h-10 rounded-lg flex items-center justify-center text-lg" :style="{ backgroundColor: habit.habitColor + '20', color: habit.habitColor }">
+                {{ habit.habitIcon }}
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ habit.habitTitle }}</span>
+                  <span class="text-sm font-bold" :style="{ color: habit.habitColor }">{{ habit.completionRate }}%</span>
+                </div>
+                <div class="h-2 bg-gray-100 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full transition-all duration-500" :style="{ width: habit.completionRate + '%', backgroundColor: habit.habitColor }"></div>
+                </div>
               </div>
             </div>
+          </div>
+          <div v-else class="py-8 text-center text-gray-400 text-sm">
+            No habits yet. Add some habits to track your performance!
           </div>
         </div>
       </div>
