@@ -171,30 +171,72 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Calculate habit-specific completion rates
-    const habitCompletionRates = await db
+    // Calculate habit-specific completion rates (daily-based)
+    // Get all habits for the user
+    const userHabits = await db
       .select({
         habitId: habit.id,
         habitTitle: habit.title,
         habitIcon: habit.icon,
         habitColor: habit.color,
-        totalTasks: sql<number>`count(distinct ${habitTask.id})`.as('totalTasks'),
-        completedTasks: sql<number>`count(distinct ${habitTaskCompletion.taskId})`.as('completedTasks'),
       })
       .from(habit)
-      .leftJoin(habitTask, eq(habitTask.habitId, habit.id))
-      .leftJoin(habitTaskCompletion, and(
-        eq(habitTaskCompletion.taskId, habitTask.id),
-        eq(habitTaskCompletion.userId, effectiveUserId),
-        sql`${habitTaskCompletion.date} >= ${thirtyDaysAgoStr}`
-      ))
       .where(eq(habit.userId, effectiveUserId))
-      .groupBy(habit.id, habit.title, habit.icon, habit.color)
 
-    const habitStats = habitCompletionRates.map(h => ({
-      ...h,
-      completionRate: h.totalTasks > 0 ? Math.round((h.completedTasks / h.totalTasks) * 100) : 0
-    }))
+    const habitStats = []
+
+    for (const h of userHabits) {
+      // Get all tasks for this habit
+      const habitTasks = await db
+        .select({
+          id: habitTask.id,
+          createdAt: habitTask.createdAt,
+        })
+        .from(habitTask)
+        .where(eq(habitTask.habitId, h.habitId!))
+
+      // Calculate daily completion rate for this habit
+      let totalDailyRate = 0
+      let daysWithTasks = 0
+
+      for (let i = 0; i < 30; i++) {
+        const d = new Date()
+        d.setDate(d.getDate() - i)
+        const dateStr = d.toISOString().split('T')[0]!
+
+        // Count tasks that existed on this day
+        let tasksOnDay = 0
+        habitTasks.forEach(task => {
+          const taskDate = new Date(task.createdAt!).toISOString().split('T')[0]!
+          if (dateStr >= taskDate) {
+            tasksOnDay++
+          }
+        })
+
+        if (tasksOnDay > 0) {
+          // Count completions on this day for this habit
+          const completionsOnDay = allCompletions.filter(
+            c => c.date === dateStr && c.habitId === h.habitId
+          ).length
+
+          const dayRate = completionsOnDay / tasksOnDay
+          totalDailyRate += dayRate
+          daysWithTasks++
+        }
+      }
+
+      const completionRate = daysWithTasks > 0 ? Math.round((totalDailyRate / daysWithTasks) * 100) : 0
+
+      habitStats.push({
+        habitId: h.habitId!,
+        habitTitle: h.habitTitle,
+        habitIcon: h.habitIcon,
+        habitColor: h.habitColor,
+        totalTasks: habitTasks.length,
+        completedTasks: allCompletions.filter(c => c.habitId === h.habitId).length,
+        completionRate
+      })
+    }
 
     // Find most consistent habit
     const mostConsistent = habitStats.length > 0 
