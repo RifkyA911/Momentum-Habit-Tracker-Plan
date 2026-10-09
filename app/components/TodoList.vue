@@ -144,6 +144,7 @@ const deleteTodo = async (id: string) => {
   if (idx === -1) return
 
   const removed = todos.value.splice(idx, 1)[0]
+  if (!removed) return
 
   if (props.mode === 'demo') {
     saveDemoTodos()

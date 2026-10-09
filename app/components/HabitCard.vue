@@ -97,11 +97,11 @@ const onHeaderDragStart = (e: DragEvent) => {
       </div>
       
       <UPopover :popper="{ placement: 'bottom-end' }">
-        <UButton color="gray" variant="ghost" icon="i-lucide-more-vertical" @mousedown.stop />
+        <UButton color="neutral" variant="ghost" icon="i-lucide-more-vertical" @mousedown.stop />
         <template #content>
           <div class="p-1 min-w-[140px]">
             <UButton 
-              color="gray" 
+              color="neutral" 
               variant="ghost" 
               block 
               icon="i-lucide-pencil"
@@ -111,7 +111,7 @@ const onHeaderDragStart = (e: DragEvent) => {
               Edit Habit
             </UButton>
             <UButton 
-              color="red" 
+              color="error" 
               variant="ghost" 
               block 
               icon="i-lucide-trash-2"

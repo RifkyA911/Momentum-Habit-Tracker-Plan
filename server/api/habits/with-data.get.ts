@@ -78,7 +78,7 @@ export default defineEventHandler(async (event) => {
       if (!acc[completion.taskId]) {
         acc[completion.taskId] = []
       }
-      acc[completion.taskId].push({
+      acc[completion.taskId]!.push({
         date: completion.date,
         completedAt: completion.completedAt
       })

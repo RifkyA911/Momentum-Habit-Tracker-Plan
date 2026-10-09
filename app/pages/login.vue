@@ -111,26 +111,7 @@ const handleGoogleLogin = async () => {
                   size="xl"
                   placeholder="hello@example.com"
                   variant="none"
-                  :ui="{
-                    wrapper: 'relative',
-                    base: `
-                    h-14
-                    rounded-2xl
-                    border
-                    border-white/8
-                    bg-white/[0.03]
-                    px-4
-                    text-white
-                    placeholder:text-white/20
-                    backdrop-blur-xl
-                    transition-all
-                    duration-300
-                    focus:border-primary-400/40
-                    focus:bg-white/[0.05]
-                    focus:ring-4
-                    focus:ring-primary-500/10
-                `,
-                  }"
+                  class="h-14 rounded-2xl border border-white/8 bg-white/[0.03] px-4 text-white placeholder:text-white/20 backdrop-blur-xl transition-all duration-300 focus:border-primary-400/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-primary-500/10"
                 />
               </div>
 
@@ -148,26 +129,7 @@ const handleGoogleLogin = async () => {
                   size="xl"
                   placeholder="••••••••"
                   variant="none"
-                  :ui="{
-                    wrapper: 'relative',
-                    base: `
-                    h-14
-                    rounded-2xl
-                    border
-                    border-white/8
-                    bg-white/[0.03]
-                    px-4
-                    text-white
-                    placeholder:text-white/20
-                    backdrop-blur-xl
-                    transition-all
-                    duration-300
-                    focus:border-primary-400/40
-                    focus:bg-white/[0.05]
-                    focus:ring-4
-                    focus:ring-primary-500/10
-                `,
-                  }"
+                  class="h-14 rounded-2xl border border-white/8 bg-white/[0.03] px-4 text-white placeholder:text-white/20 backdrop-blur-xl transition-all duration-300 focus:border-primary-400/40 focus:bg-white/[0.05] focus:ring-4 focus:ring-primary-500/10"
                 />
               </div>
               <!-- <NuxtLink
@@ -202,7 +164,7 @@ const handleGoogleLogin = async () => {
             <UButton
               block
               size="xl"
-              color="white"
+              color="neutral"
               variant="soft"
               icon="i-simple-icons-google"
               class="h-14 rounded-2xl border border-white/10 bg-white/5 text-white hover:bg-white/10"

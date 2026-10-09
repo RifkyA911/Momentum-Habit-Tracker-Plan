@@ -19,7 +19,7 @@ const fetchHabits = async () => {
     completionsByTask.value = data.completionsByTask
   } catch (err) {
     console.error('Failed to load history', err)
-    toast.add({ title: 'Error', description: 'Could not load history data', color: 'red' })
+    toast.add({ title: 'Error', description: 'Could not load history data', color: 'error' })
   } finally {
     isFetching.value = false
   }
@@ -60,7 +60,7 @@ const historyDays = computed(() => {
   for (let i = 0; i < daysLoaded.value; i++) {
     const d = new Date()
     d.setDate(today.getDate() - i)
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = d.toISOString().split('T')[0]!
     
     let totalTasks = 0
     let completedTasks = 0
@@ -118,7 +118,7 @@ const toggleTaskOnDate = async (task: any, dateStr: string) => {
     }
     await fetchHabits()
   } catch (err) {
-    toast.add({ title: 'Update failed', description: 'Unable to update task.', color: 'red' })
+    toast.add({ title: 'Update failed', description: 'Unable to update task.', color: 'error' })
   }
 }
 
@@ -128,7 +128,7 @@ watch(observerTarget, (el) => {
   if (el) {
     if (observer) observer.disconnect()
     observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
+      if (entries[0]?.isIntersecting) {
         loadMore()
       }
     }, { rootMargin: '400px' })
@@ -148,7 +148,7 @@ onUnmounted(() => {
 <template>
   <div class="max-w-3xl mx-auto space-y-6">
     <div class="flex items-center gap-3">
-      <UButton to="/dashboard" color="gray" variant="ghost" icon="i-lucide-arrow-left" class="mr-2 shrink-0" />
+      <UButton to="/dashboard" color="neutral" variant="ghost" icon="i-lucide-arrow-left" class="mr-2 shrink-0" />
       <div>
         <h1 class="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
           <UIcon name="i-lucide-history" class="w-6 h-6 text-primary-500" />

@@ -2,9 +2,10 @@
 definePageMeta({ layout: "default" });
 
 // Use native useFetch to get session data during SSR and hydration
-const { data: session } = await useFetch('/api/auth/get-session', {
+const { data: sessionData } = await useFetch<any>('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
+const session = computed(() => sessionData.value?.data || sessionData.value)
 
 // Demo heatmap pattern for visual showcase (deterministic, not random)
 const heatmapShowcase = [
@@ -32,7 +33,7 @@ const phrases = [
 
 const currentPhraseIndex = ref(0)
 const isTransitioning = ref(false)
-const currentWords = computed(() => phrases[currentPhraseIndex.value].split(' '))
+const currentWords = computed(() => (phrases[currentPhraseIndex.value] || '').split(' '))
 
 const rotatePhrase = () => {
   isTransitioning.value = true
@@ -211,14 +212,14 @@ onMounted(() => {
 
       <div class="hero-cta flex flex-col sm:flex-row items-center justify-center gap-4">
         <template v-if="session?.user">
-          <UButton to="/dashboard" color="black" size="xl"
+          <UButton to="/dashboard" color="neutral" size="xl"
             class="text-center justify-center rounded-full px-8 w-full sm:w-auto font-medium btn-glow"
             icon="i-lucide-arrow-right">
             Go to Dashboard
           </UButton>
         </template>
         <template v-else>
-          <UButton to="/login" color="black" size="xl"
+          <UButton to="/login" color="neutral" size="xl"
             class="text-center justify-center rounded-full px-8 w-full sm:w-auto font-medium btn-glow"
             icon="i-simple-icons-google">
             Continue with Google
@@ -527,13 +528,13 @@ onMounted(() => {
         A simple habit tracker designed to help you build better habits through consistency and behavioral insights.
       </p>
       <template v-if="session?.user">
-        <UButton to="/dashboard" color="black" size="xl" class="rounded-full px-10 font-medium btn-glow"
+        <UButton to="/dashboard" color="neutral" size="xl" class="rounded-full px-10 font-medium btn-glow"
           icon="i-lucide-arrow-right">
           Go to Dashboard
         </UButton>
       </template>
       <template v-else>
-        <UButton to="/login" color="black" size="xl" class="rounded-full px-10 font-medium btn-glow"
+        <UButton to="/login" color="neutral" size="xl" class="rounded-full px-10 font-medium btn-glow"
           icon="i-simple-icons-google">
           Continue with Google
         </UButton>

@@ -107,9 +107,9 @@ export default defineEventHandler(async (event) => {
     let bestStreak = 0
 
     for (let i = sortedDates.length - 1; i >= 0; i--) {
-      const date = sortedDates[i]
+      const date = sortedDates[i]!
       const day = dailyStats[date]
-      if (day.total > 0 && day.completed === day.total) {
+      if (day && day.total > 0 && day.completed === day.total) {
         currentStreak++
         bestStreak = Math.max(bestStreak, currentStreak)
       } else {
@@ -151,7 +151,7 @@ export default defineEventHandler(async (event) => {
       hourDistribution[Math.floor(h.hour)] = h.count
     })
 
-    const peakHour = hourStats.length > 0 ? Math.floor(hourStats[0].hour) : null
+    const peakHour = hourStats.length > 0 && hourStats[0] ? Math.floor(hourStats[0].hour) : null
     let peakTime = 'N/A'
     let timeOfDay = 'N/A'
     

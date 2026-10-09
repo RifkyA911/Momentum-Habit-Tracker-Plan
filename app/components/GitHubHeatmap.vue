@@ -69,6 +69,7 @@ const monthLabels = computed(() => {
 
   grid.value.forEach((week, wIdx) => {
     const rep = week.find(d => d.jsDate.getFullYear() === selectedYear.value) || week[0]
+    if (!rep) return
     const m = rep.jsDate.getMonth()
     if (m !== currentMonth) {
       if (currentMonth !== -1) {

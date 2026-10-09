@@ -36,7 +36,7 @@ const colorModes = [
   <UPopover :popper="{ placement: 'bottom-end', strategy: 'absolute' }">
     <UButton
       icon="i-lucide-palette"
-      color="gray"
+      color="neutral"
       variant="ghost"
       aria-label="Theme settings"
       class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"

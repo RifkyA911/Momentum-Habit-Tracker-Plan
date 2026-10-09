@@ -1,6 +1,6 @@
-import { eq, inArray } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { db } from '../../utils/db'
-import { habit, habitTask } from '../../db/schema'
+import { habitTaskCompletion } from '../../db/schema'
 import { auth } from '../../utils/auth'
 
 export default defineEventHandler(async (event) => {
@@ -8,40 +8,39 @@ export default defineEventHandler(async (event) => {
     headers: event.headers
   })
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized'
     })
   }
 
-  const userHabits = await db.select().from(habit).where(eq(habit.userId, session.user.id))
-  if (userHabits.length === 0) {
+  // Get all completions for user
+  const completions = await db.select()
+    .from(habitTaskCompletion)
+    .where(eq(habitTaskCompletion.userId, session.user.id))
+
+  if (completions.length === 0) {
     return { streak: 0 }
   }
 
-  const habitIds = userHabits.map(h => h.id)
-  
-  const tasks = await db.select().from(habitTask).where(inArray(habitTask.habitId, habitIds))
-
-  // Calculate streak
+  // Calculate streak from completions
   const counts: Record<string, number> = {}
-  tasks.forEach((task) => {
-    if (task.completed && task.completedAt) {
-      const date = new Date(task.completedAt).toISOString().split('T')[0]
-      counts[date] = (counts[date] || 0) + 1
+  completions.forEach((c) => {
+    if (c.date) {
+      counts[c.date] = (counts[c.date] || 0) + 1
     }
   })
 
-  const activeDates = new Set(Object.keys(counts).filter(d => counts[d] > 0))
+  const activeDates = new Set(Object.keys(counts).filter(d => (counts[d] ?? 0) > 0))
   
   let streak = 0
   const checkDate = new Date()
-  const todayStr = checkDate.toISOString().split('T')[0]
+  const todayStr = checkDate.toISOString().split('T')[0]!
   
   const yesterday = new Date()
   yesterday.setDate(checkDate.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  const yesterdayStr = yesterday.toISOString().split('T')[0]!
   
   if (!activeDates.has(todayStr) && !activeDates.has(yesterdayStr)) {
     return { streak: 0 }
@@ -50,7 +49,7 @@ export default defineEventHandler(async (event) => {
   let currentCheck = activeDates.has(todayStr) ? checkDate : yesterday
   
   while (true) {
-    const dateStr = currentCheck.toISOString().split('T')[0]
+    const dateStr = currentCheck.toISOString().split('T')[0]!
     if (activeDates.has(dateStr)) {
       streak++
       currentCheck.setDate(currentCheck.getDate() - 1)

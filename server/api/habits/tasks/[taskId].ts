@@ -3,6 +3,7 @@ import { db } from '../../../utils/db'
 import { habitTask, habit, habitTaskCompletion } from '../../../db/schema'
 import { auth } from '../../../utils/auth'
 import { nanoid } from 'nanoid'
+import { dispatchEventToN8N } from '../../../utils/events'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
@@ -65,6 +66,8 @@ export default defineEventHandler(async (event) => {
           date: date,
           completedAt: new Date()
         } as any)
+
+        await dispatchEventToN8N('task.completed', session.user.id, { taskId, date, completed: true })
       } else {
         // Delete completion record for the specified date
         await db.delete(habitTaskCompletion)
@@ -73,6 +76,8 @@ export default defineEventHandler(async (event) => {
             eq(habitTaskCompletion.userId, session.user.id!),
             eq(habitTaskCompletion.date, date)
           ))
+
+        await dispatchEventToN8N('task.uncompleted', session.user.id, { taskId, date, completed: false })
       }
       
       // Return the task with completion status

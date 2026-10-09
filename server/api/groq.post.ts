@@ -1,22 +1,10 @@
-import Groq from 'groq-sdk'
+import { executeAICompletion, extractJSONFromAIResponse } from '../utils/ai'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const body = await readBody(event)
 
-  if (!config.groqApiKey) {
-    throw createError({
-      statusCode: 500,
-      message: 'Groq API Key is not configured'
-    })
-  }
-
-  const groq = new Groq({
-    apiKey: config.groqApiKey
-  })
-
   try {
-    // Check if this is a behavioral reflection request
+    // 1. Behavioral reflection request
     if (body.type === 'reflection' && body.habitData) {
       const { habitData } = body
 
@@ -33,41 +21,36 @@ Analyze the user's habit completion data and provide ONE short, reflective obser
 
       const userPrompt = `Here is my habit data from the last 30 days:
 
-Total habits: ${habitData.totalHabits}
-Total completions: ${habitData.totalCompletions}
+Total habits: ${habitData.totalHabits ?? 0}
+Total completions: ${habitData.totalCompletions ?? 0}
 
 Habit completion breakdown:
-${habitData.habitStats.map((s: any) => `- ${s.habitTitle}: ${s.completedCount} completions`).join('\n')}
+${Array.isArray(habitData.habitStats) ? habitData.habitStats.map((s: any) => `- ${s.habitTitle}: ${s.completedCount} completions`).join('\n') : 'N/A'}
 
 Time of day patterns:
-${Object.entries(habitData.timePatterns).map(([time, count]) => `- ${time}: ${count} completions`).join('\n')}
+${habitData.timePatterns ? Object.entries(habitData.timePatterns).map(([time, count]) => `- ${time}: ${count} completions`).join('\n') : 'N/A'}
 
 Day of week patterns:
-${Object.entries(habitData.dayPatterns).map(([day, count]) => `- ${day}: ${count} completions`).join('\n')}
+${habitData.dayPatterns ? Object.entries(habitData.dayPatterns).map(([day, count]) => `- ${day}: ${count} completions`).join('\n') : 'N/A'}
 
 Provide ONE short, reflective observation about my behavioral patterns based on this data.`
 
-      const chatCompletion = await groq.chat.completions.create({
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ],
-        model: 'llama-3.1-8b-instant',
+      const result = await executeAICompletion({
+        messages: [{ role: 'user', content: userPrompt }],
+        systemPrompt,
         temperature: 0.7,
-        max_tokens: 200
+        maxTokens: 250,
+        preferredProvider: body.provider,
+        preferredModel: body.model
       })
 
       return {
-        insight: chatCompletion.choices[0]?.message?.content || 'Unable to generate insight at this time.'
+        insight: result.text.trim() || 'You are consistently showing up for your habits.',
+        _meta: { provider: result.provider, model: result.model }
       }
     }
 
+    // 2. Habit template generation
     if (body.type === 'generate-habit' && body.prompt) {
       const systemPrompt = `You are an AI that generates habit tracking templates. The user will give you a goal or topic. You must respond with ONLY a valid JSON object, no markdown formatting, no explanations. 
 Format:
@@ -80,49 +63,41 @@ Format:
 }
 Limit tasks to 3-5 specific, actionable items.`
 
-      const chatCompletion = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: body.prompt }
-        ],
-        model: 'llama-3.1-8b-instant',
+      const result = await executeAICompletion({
+        messages: [{ role: 'user', content: body.prompt }],
+        systemPrompt,
         temperature: 0.7,
-        max_tokens: 300,
-        response_format: { type: 'json_object' }
+        maxTokens: 500,
+        jsonMode: true,
+        preferredProvider: body.provider,
+        preferredModel: body.model
       })
 
-      const content = chatCompletion.choices[0]?.message?.content || '{}'
-      try {
-        return JSON.parse(content)
-      } catch (e) {
-        throw createError({ statusCode: 500, message: 'Failed to parse AI response' })
-      }
+      return extractJSONFromAIResponse(result.text)
     }
 
-    // Default chat behavior
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an AI habit tracker assistant named Momentum. Give concise, actionable advice on building good habits.'
-        },
-        {
-          role: 'user',
-          content: body.message || 'Give me a short tip for staying consistent.'
-        }
-      ],
-      model: 'llama-3.1-8b-instant',
+    // 3. Default chat / tip behavior
+    const result = await executeAICompletion({
+      messages: [{
+        role: 'user',
+        content: body.message || 'Give me a short tip for staying consistent.'
+      }],
+      systemPrompt: 'You are an AI habit tracker assistant named Momentum. Give concise, actionable advice on building good habits.',
       temperature: 0.7,
-      max_tokens: 150
+      maxTokens: 200,
+      preferredProvider: body.provider,
+      preferredModel: body.model
     })
 
     return {
-      reply: chatCompletion.choices[0]?.message?.content || 'No response from Groq.'
+      reply: result.text.trim() || 'Stay consistent and focus on progress over perfection.',
+      _meta: { provider: result.provider, model: result.model }
     }
   } catch (error: any) {
+    console.error('[AI] Unified API handler error:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || 'Something went wrong with Groq'
+      message: error?.message || 'Something went wrong with the AI service'
     })
   }
 })

@@ -247,12 +247,12 @@ const close = () => {
                     type="button"
                     class="color-dot w-7 h-7 rounded-full transition-all duration-200 hover:scale-125 relative"
                     :class="color === c ? 'scale-110 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#0c1222]' : 'hover:shadow-lg'"
-                    :style="{
+                    :style="({
                       backgroundColor: c,
-                      ringColor: c,
+                      '--tw-ring-color': c,
                       boxShadow: color === c ? `0 0 16px ${c}50` : undefined,
                       animationDelay: `${idx * 25}ms`
-                    }"
+                    } as any)"
                     @click="color = c"
                   >
                     <Transition name="check-pop">

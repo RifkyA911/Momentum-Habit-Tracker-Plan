@@ -1,49 +1,62 @@
-# Momentum - Software Design Document (SDD) v2
+# Momentum - Software Design Document (SDD) v3
 
 ## 1. Project Overview
-**Project Name:** Momentum  
-**Type:** AI-powered Habit Tracking Micro SaaS  
-**Goal:** Build a modern fullstack productivity platform with polished UX, optimistic UI, and AI-powered insights, designed as a production-grade portfolio.
+- **Nama Proyek:** Momentum
+- **Kategori:** AI-Powered Habit Tracker & Behavioral Consistency Platform
+- **Visi:** Memberikan pengalaman membangun kebiasaan dengan *Dopamine-Driven UX*, interaksi tanpa latensi (*Optimistic UI*), visualisasi 365 hari ala GitHub Heatmap, serta ekosistem cerdas berbasis **9Router, Multi-Model AI (Gemini, Claude, GPT, DeepSeek, Groq, Ollama)**, **n8n Automation**, dan **Nous Research Hermes Agent**.
 
-## 2. Product Vision
-- Provide a clean, dopamine-driven productivity experience.
-- Use visual feedback (GitHub-style heatmap) to increase user consistency.
-- Showcase modern engineering with realistic timelines and maintainable architecture.
+---
 
-## 3. Tech Stack (Revised)
-- **Package Manager:** Bun (STRICT: Do NOT use pnpm or npm)
-- **Frontend:** Nuxt 4, Vue 3, TypeScript, TailwindCSS v4, Nuxt UI / shadcn-vue
-- **Backend:** H3 (Nuxt Server Routes)
-- **Database:** PostgreSQL (Supabase / Neon) + Drizzle ORM
-- **Auth:** Better Auth
-- **State Management:** Pinia (for local state caching)
-- **AI Integration:** Groq (LLaMA 3) via `groq-sdk` for fast & cheap inference
-- **Analytics & Monitoring:** PostHog & Sentry
-- **Deployment:** Vercel
+## 2. Tech Stack & Dependensi
 
-## 4. Architecture (Simplified & Realistic)
-To ensure the project can be completed in a 4-week MVP without over-engineering:
-- **Client (Vue/Nuxt) → API Layer (H3) → Drizzle ORM → PostgreSQL**
-- *Note:* Removed "Repository Layer" to embrace Drizzle's SQL-like lightweight nature.
-- *Note:* Changed "Offline-first sync queue" to **Optimistic UI Updates**. Realtime sync is dropped from the MVP to focus on shipping core features fast, using Optimistic UI to provide an instant-feel experience.
+| Layer | Teknologi & Versi | Catatan Implementasi |
+|---|---|---|
+| **Runtime & PM** | Bun (`^1.1.27`) | Digunakan untuk runtime, instalasi dependensi, dan eksekusi skrip |
+| **Fullstack Framework** | Nuxt 4 (`^4.4.6`) | Arsitektur modular frontend Vue 3.5 & backend Nitro |
+| **Bahasa** | TypeScript 5.8+ | Mode ketat (*strict mode*), 100% type-safe |
+| **UI & Styling** | Nuxt UI v4 (`@nuxt/ui: ^4.8.0`) + Tailwind CSS v4 (`^4.3.0`) | Sistem token semantik (`primary`, `neutral`, `error`, `success`, `info`, `warning`) |
+| **Database & ORM** | PostgreSQL + Drizzle ORM (`^0.45.0`) | Tanpa overhead berat, kueri SQL type-safe |
+| **Autentikasi** | Better Auth (`^1.4.19`) | Manajemen sesi aman via cookie, integrasi Google OAuth & Kredensial |
+| **Multi-Model AI** | Universal Engine (`server/utils/ai.ts`) | Mendukung 9Router, Gemini, Claude, OpenAI, DeepSeek, Groq, OpenRouter, Ollama |
+| **Automasi** | n8n Webhook Dispatcher & Receiver | Outbound event bus dan inbound action controller |
+| **Autonomous Agent** | Nous Research Hermes Telemetry | Endpoint agregasi metrik kebiasaan & sinyal burnout |
+| **Audio Synthesis** | Web Audio API (`app/utils/sound.ts`) | Generator suara prosedural bebas aset eksternal |
 
-## 5. Core Features
-1. **Habit CRUD System**: Manage daily habits.
-2. **Optimistic UI Check-ins**: Clicking complete feels instant without waiting for server response.
-3. **Advanced Heatmap**: GitHub-style contribution graph.
-4. **AI Consistency Insights (Powered by Groq)**: Analyze user's habit logs and provide actionable feedback.
-5. **Demo Mode**: Browser-based demo with dummy data for users to try the app without authentication.
-6. **Custom Theme System**: Dynamic primary color picker with localStorage persistence.
-7. **Global Loading Screen**: Animated loading screen with star trail background and bouncing icon.
-8. **Footer Component**: Author attribution and repository links.
+---
 
-## 6. MVP Timeline (4 Weeks)
-- **Week 1:** Project setup, Database Schema (Drizzle), Authentication (Better Auth).
-- **Week 2:** Habit CRUD + Optimistic UI state management + Heatmap visualization.
-- **Week 3:** AI Consistency Insights integration (Groq API), prompt engineering.
-- **Week 4:** UX Polish, Animations, Monitoring setup (Sentry/PostHog), Deployment.
+## 3. Komponen Arsitektur Sistem
 
-## 7. AI Implementation Strategy
-- **Provider:** Groq
-- **Model:** `llama3-8b-8192` or `llama3-70b-8192` (Extremely fast generation, cost-effective).
-- **Workflow:** User requests an insight → H3 server route fetches last 30 days of habit logs → Sends context to Groq API → Returns streaming response to frontend.
+### 3.1. Frontend Architecture
+- **Pages**: Menggunakan Nuxt file-based routing di dalam folder `app/pages/`.
+  - Landing (`index.vue`), Dashboard (`dashboard/index.vue`), Riwayat (`dashboard/history.vue`), Akun (`dashboard/account.vue`), Auth (`login.vue`, `register.vue`, `forgot-password.vue`, `reset-password.vue`), Test Gateway (`groq-test.vue`), Demo Mode (`demo.vue`), Feedback (`feedback.vue`).
+- **Layouts**: `app/layouts/dashboard.vue`, `app/layouts/auth.vue`, `app/layouts/default.vue`.
+- **Theme System**: Composable `useTheme.ts` mengelola 18 pilihan palet warna dan menyuntikkan variabel CSS `--color-primary-*` ke `:root` secara dinamis dengan persistensi `localStorage`.
+- **Optimistic State Management**: State habit dikelola secara reaktif. Perubahan centang langsung memicu update visual instan dan efek suara dalam 0ms, sementara sinkronisasi HTTP berjalan di latar belakang.
+
+### 3.2. Server Layer (Nitro)
+- **H3 Event Handlers**: Seluruh endpoint RESTful didefinisikan di `server/api/`.
+- **Database Connection**: Pool koneksi PostgreSQL diinisialisasi melalui `server/utils/db.ts` dan diakses oleh Drizzle ORM.
+- **Session Validation**: Middleware autentikasi memvalidasi sesi Better Auth sebelum mengizinkan mutasi data habit.
+
+### 3.3. Universal AI Subsystem
+- **Gateway Default**: Secara default diarahkan ke 9Router (`http://localhost:20128/v1`) untuk efisiensi token, caching prompt, dan kontrol kuota.
+- **Cascading Failover**: Jika sebuah model gagal (error 429 atau timeout), fungsi `executeAICompletionWithFallback` secara otomatis mencoba model aktif berikutnya.
+- **JSON Sanitization**: Parser `extractJSONFromAIResponse` menjamin payload JSON dari AI bebas dari karakter markdown backtick sebelum dikirim ke client.
+
+### 3.4. n8n Automation Engine
+- **Event Bus Outbound**: Ketika task diselesaikan atau dibatalkan, `server/utils/events.ts` memanggil webhook n8n secara non-blocking (*fire-and-forget*).
+- **Inbound Action Controller**: Webhook di `server/api/integrations/n8n.post.ts` menerima aksi dari n8n untuk WhatsApp bot (baca summary, centang task via pencarian judul fuzzy, buat habit baru).
+
+### 3.5. Hermes Cognitive Agent
+- Endpoint `server/api/agent/habits.get.ts` mengekstrak data telemetry:
+  - Menghitung rasio penyelesaian 7 hari terakhir.
+  - Mendeteksi hari paling rentan gagal (*drop-off day*).
+  - Mengelompokkan jam aktif pengguna (*morning*, *afternoon*, *evening*, *night*).
+  - Menentukan level risiko kejenuhan (*burnout risk*).
+
+---
+
+## 4. Keamanan & Kepatuhan
+1. **Proteksi Rahasia & API Keys**: Kunci rahasia AI dan Webhook Secret hanya dibaca di sisi server (Nitro runtime config) dan tidak pernah bocor ke bundle client.
+2. **Keamanan Sesi**: Cookie sesi Better Auth dikonfigurasi dengan flag `HttpOnly`, `SameSite=Lax`, dan `Secure` pada mode produksi.
+3. **Pembersihan Input**: Validasi input ketat pada setiap mutasi data untuk mencegah injeksi SQL dan XSS.

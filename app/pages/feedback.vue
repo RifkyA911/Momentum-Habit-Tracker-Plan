@@ -5,17 +5,18 @@ const config = useRuntimeConfig()
 const AUTHORIZED_USER_ID = config.public.authorizedUserId ?? ''
 
 // Get session
-const { data: session } = await useFetch('/api/auth/get-session', {
+const { data: sessionData } = await useFetch<any>('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
+const session = computed(() => sessionData.value?.data || sessionData.value)
 
 // Check if user is authorized
-const isAuthorized = session?.value?.user?.id === AUTHORIZED_USER_ID
+const isAuthorized = session.value?.user?.id === AUTHORIZED_USER_ID
 
 console.log({
   runtime: config.public.authorizedUserId,
   env: process.env.AUTHORIZED_USER_ID,
-  session: session?.value?.user?.id
+  session: session.value?.user?.id
 })
 
 // If not authorized, show 403

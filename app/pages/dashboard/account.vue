@@ -3,9 +3,10 @@ import { authClient } from '~/utils/auth-client'
 
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
-const { data: session } = await useFetch('/api/auth/get-session', {
+const { data: sessionData } = await useFetch<any>('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
+const session = computed(() => sessionData.value?.data || sessionData.value)
 
 const username = ref(session.value?.user?.name || '')
 const isSaving = ref(false)
@@ -58,8 +59,8 @@ const handleSave = async () => {
 
         <div class="space-y-6">
           <!-- Alert Messages -->
-          <UAlert v-if="successMessage" icon="i-lucide-check-circle" color="green" variant="subtle" :title="successMessage" class="mb-4" />
-          <UAlert v-if="errorMessage" icon="i-lucide-alert-circle" color="red" variant="subtle" :title="errorMessage" class="mb-4" />
+          <UAlert v-if="successMessage" icon="i-lucide-check-circle" color="success" variant="subtle" :title="successMessage" class="mb-4" />
+          <UAlert v-if="errorMessage" icon="i-lucide-alert-circle" color="error" variant="subtle" :title="errorMessage" class="mb-4" />
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             <!-- Profile Picture -->

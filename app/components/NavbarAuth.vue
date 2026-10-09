@@ -3,9 +3,10 @@ import { authClient } from '~/utils/auth-client'
 import { playSound } from '~/utils/sound'
 
 // Use Nuxt's native useFetch to ensure SSR hydration works properly and passes cookies
-const { data: session } = await useFetch('/api/auth/get-session', {
+const { data: sessionData } = await useFetch<any>('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
+const session = computed(() => sessionData.value?.data || sessionData.value)
 
 const handleSignOut = async () => {
   await authClient.signOut()
@@ -45,7 +46,7 @@ const userMenuItems = computed(() => [
     <template v-if="session?.user">
       <UDropdownMenu
         :items="userMenuItems"
-        :content="{ placement: 'bottom-end' }"
+        :content="{ align: 'end' }"
       >
         <UAvatar
           :src="session.user.image || undefined"
@@ -67,7 +68,7 @@ const userMenuItems = computed(() => [
     <template v-else>
       <UButton
         to="/login"
-        color="black"
+        color="neutral"
         variant="solid"
         class="rounded-full px-5"
         @click="playSound('nav')"

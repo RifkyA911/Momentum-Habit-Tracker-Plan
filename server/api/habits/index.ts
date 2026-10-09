@@ -2,13 +2,14 @@ import { eq, asc, desc } from 'drizzle-orm'
 import { db } from '../../utils/db'
 import { habit, habitTask } from '../../db/schema'
 import { auth } from '../../utils/auth'
+import { dispatchEventToN8N } from '../../utils/events'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({
     headers: event.headers
   })
 
-  if (!session?.user) {
+  if (!session?.user?.id) {
     throw createError({
       statusCode: 401,
       message: 'Unauthorized'
@@ -45,16 +46,30 @@ export default defineEventHandler(async (event) => {
       description: body.description || null
     }).returning()
 
+    const created = newHabit[0]
+    if (!created) {
+      throw createError({
+        statusCode: 500,
+        message: 'Failed to create habit'
+      })
+    }
+
     if (body.tasks && Array.isArray(body.tasks) && body.tasks.length > 0) {
       const tasksToInsert = body.tasks.map((taskText: string, index: number) => ({
         id: crypto.randomUUID(),
-        habitId: newHabit[0].id,
+        habitId: created.id,
         text: taskText,
         orderIndex: index
       }))
       await db.insert(habitTask).values(tasksToInsert)
     }
 
-    return newHabit[0]
+    // Dispatch habit.created event to n8n
+    await dispatchEventToN8N('habit.created', session.user.id, {
+      habitId: created.id,
+      title: created.title
+    })
+
+    return created
   }
 })

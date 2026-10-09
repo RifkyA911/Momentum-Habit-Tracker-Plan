@@ -104,14 +104,9 @@ const handleReset = async () => {
                   type="email"
                   size="xl"
                   placeholder="hello@example.com"
-                  color="white"
+                  color="neutral"
                   variant="outline"
-                  class="w-full"
-                  :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
-                    wrapper: 'w-full'
-                  }"
+                  class="w-full rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/25"
                 />
                 <p class="text-xs text-white/30">We'll send you a reset link to this email</p>
               </div>

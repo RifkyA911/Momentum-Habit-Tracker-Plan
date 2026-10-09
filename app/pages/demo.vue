@@ -23,7 +23,7 @@ const calculateHeatmap = () => {
   habits.value.forEach(habit => {
     habit.tasks.forEach((task: any) => {
       if (task.completed && task.completedAt) {
-        const date = new Date(task.completedAt).toISOString().split('T')[0]
+        const date = new Date(task.completedAt).toISOString().split('T')[0]!
         counts[date] = (counts[date] || 0) + 1
       }
     })
@@ -34,13 +34,13 @@ const calculateHeatmap = () => {
   for(let i=1; i<90; i++) {
     const d = new Date()
     d.setDate(today.getDate() - i)
-    const dStr = d.toISOString().split('T')[0]
+    const dStr = d.toISOString().split('T')[0]!
     if (!counts[dStr] && Math.random() > 0.5) {
       counts[dStr] = Math.floor(Math.random() * 4)
     }
   }
 
-  heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
+  heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] || 0 }))
 }
 
 // Helper to check if a date string is today
@@ -132,7 +132,7 @@ const submitHabit = (data: any) => {
       color: data.color,
       tasks: []
     })
-    toast.add({ title: 'Habit created', description: `${data.icon} ${data.title} added successfully.`, color: 'green' })
+    toast.add({ title: 'Habit created', description: `${data.icon} ${data.title} added successfully.`, color: 'success' })
   } else {
     const idx = habits.value.findIndex(h => h.id === data.id)
     if (idx !== -1) {
@@ -140,7 +140,7 @@ const submitHabit = (data: any) => {
       habits.value[idx].description = data.description
       habits.value[idx].icon = data.icon
       habits.value[idx].color = data.color
-      toast.add({ title: 'Habit updated', description: 'Changes saved successfully.', color: 'green' })
+      toast.add({ title: 'Habit updated', description: 'Changes saved successfully.', color: 'success' })
     }
   }
   saveDemo()
@@ -148,7 +148,7 @@ const submitHabit = (data: any) => {
 
 const deleteHabit = (id: string) => {
   habits.value = habits.value.filter(h => h.id !== id)
-  toast.add({ title: 'Habit deleted', description: 'The habit and its tasks were removed.', color: 'red' })
+  toast.add({ title: 'Habit deleted', description: 'The habit and its tasks were removed.', color: 'error' })
   saveDemo()
 }
 
@@ -233,8 +233,7 @@ const analyzeWeek = () => {
       title: 'Pattern Detected', 
       description: 'Reading is currently your most stable habit. Your consistency tends to dip on Saturdays.', 
       color: 'primary',
-      icon: 'i-lucide-eye',
-      timeout: 8000
+      icon: 'i-lucide-eye'
     })
   }, 1500)
 }
@@ -341,7 +340,7 @@ onMounted(() => {
                       <h3 class="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
                         Behavioral Insights
                       </h3>
-                      <p class="text-xs text-gray-500 font-medium">Powered by Groq AI</p>
+                      <p class="text-xs text-gray-500 font-medium">Powered by Universal AI (9Router, Claude, GPT, Gemini, DeepSeek)</p>
                     </div>
                   </div>
 

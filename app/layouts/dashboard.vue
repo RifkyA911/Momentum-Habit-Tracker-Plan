@@ -3,7 +3,7 @@ import { authClient } from '~/utils/auth-client'
 import { playSound } from '~/utils/sound'
 import Footer from './footer.vue'
 
-const { data: session } = authClient.useSession()
+const sessionData = authClient.useSession()
 const currentStreak = useState<number | null>('currentStreak', () => null)
 
 onMounted(async () => {

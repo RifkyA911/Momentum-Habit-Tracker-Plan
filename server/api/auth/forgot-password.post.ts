@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     return { success: true, message: 'If the email exists, a reset link has been sent' }
   }
 
-  const userRecord = users[0]
+  const userRecord = users[0]!
 
   // Generate reset token
   const token = nanoid(32)

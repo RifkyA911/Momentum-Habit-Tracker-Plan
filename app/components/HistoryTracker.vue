@@ -11,7 +11,7 @@ const emit = defineEmits(['refresh'])
 const toast = useToast()
 
 // Selected date YYYY-MM-DD
-const selectedDate = ref(new Date().toISOString().split('T')[0])
+const selectedDate = ref<string>(new Date().toISOString().split('T')[0] || '')
 
 // Helper to check if dates are same day
 const isSameDay = (d1Str: string, d2Str: string) => {
@@ -56,7 +56,7 @@ const recentDays = computed(() => {
   for (let i = 13; i >= 0; i--) {
     const d = new Date()
     d.setDate(today.getDate() - i)
-    const dateStr = d.toISOString().split('T')[0]
+    const dateStr = d.toISOString().split('T')[0]!
 
     // Calculate stats for this specific day
     let totalTasks = 0
@@ -118,7 +118,7 @@ const toggleTaskOnDate = async (task: any) => {
     toast.add({
       title: wasCompleted ? 'Task unchecked' : 'Task completed',
       description: `${wasCompleted ? 'Uncompleted' : 'Completed'} "${task.text}" for ${dateStr}.`,
-      color: wasCompleted ? 'gray' : 'green'
+      color: wasCompleted ? 'neutral' : 'success'
     })
     emit('refresh')
   } catch (err) {
@@ -126,11 +126,11 @@ const toggleTaskOnDate = async (task: any) => {
     toast.add({
       title: 'Update failed',
       description: 'Unable to update task history in database.',
-      color: 'red'
+      color: 'error'
     })
   } finally {
     togglingTaskIds.value = togglingTaskIds.value.filter(id => id !== task.id)
-    playSound('click')
+    playSound('tick')
   }
 }
 </script>

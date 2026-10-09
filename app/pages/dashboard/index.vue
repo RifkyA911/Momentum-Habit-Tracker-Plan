@@ -5,7 +5,7 @@ import { playSound, startLoadingSound, stopLoadingSound } from '../../utils/soun
 definePageMeta({ layout: 'dashboard', middleware: 'auth' })
 
 const toast = useToast()
-const { data: session } = await useFetch('/api/auth/get-session', {
+const { data: session } = await useFetch<any>('/api/auth/get-session', {
   headers: import.meta.server ? useRequestHeaders(['cookie']) as Record<string, string> : {}
 })
 
@@ -35,11 +35,17 @@ const currentStreak = useState<number | null>('currentStreak', () => null)
 const isReflectionModalOpen = ref(false)
 const isTipModalOpen = ref(false)
 const aiReflection = ref('')
-const stats = ref({
+const stats = ref<any>({
   bestStreak: 0,
   completionRate: 0,
   mostConsistent: 'N/A',
-  peakTime: 'N/A'
+  peakTime: 'N/A',
+  perfectDays: 0,
+  currentStreak: 0,
+  totalCompleted: 0,
+  avgTasksPerDay: 0,
+  timeOfDay: 'N/A',
+  habitStats: []
 })
 
 // Helper to check if a date string is today
@@ -62,10 +68,10 @@ const calculateStreak = (data: { date: string; count: number }[]) => {
   let streak = 0
   const checkDate = new Date()
 
-  const todayStr = checkDate.toISOString().split('T')[0]
+  const todayStr = checkDate.toISOString().split('T')[0]!
   const yesterday = new Date()
   yesterday.setDate(checkDate.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().split('T')[0]
+  const yesterdayStr = yesterday.toISOString().split('T')[0]!
 
   if (!activeDates.has(todayStr) && !activeDates.has(yesterdayStr)) {
     return 0
@@ -74,7 +80,7 @@ const calculateStreak = (data: { date: string; count: number }[]) => {
   let currentCheck = activeDates.has(todayStr) ? checkDate : yesterday
 
   while (true) {
-    const dateStr = currentCheck.toISOString().split('T')[0]
+    const dateStr = currentCheck.toISOString().split('T')[0]!
     if (activeDates.has(dateStr)) {
       streak++
       currentCheck.setDate(currentCheck.getDate() - 1)
@@ -103,7 +109,7 @@ const fetchHabits = async () => {
       counts[date] = (counts[date] || 0) + 1
     })
 
-    heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] }))
+    heatmapData.value = Object.keys(counts).map(date => ({ date, count: counts[date] || 0 }))
     currentStreak.value = calculateStreak(heatmapData.value)
   } catch (error) {
     console.error('Error fetching habits:', error)
@@ -145,9 +151,9 @@ const generateMagicHabit = async () => {
   magicError.value = null
   startLoadingSound()
   try {
-    const aiData = await $fetch<any>('/api/groq', {
+    const aiData = await $fetch<any>('/api/ai/generate-habit', {
       method: 'POST',
-      body: { type: 'generate-habit', prompt: magicPrompt.value }
+      body: { prompt: magicPrompt.value }
     })
     
     // Submitting to habits API
@@ -160,7 +166,7 @@ const generateMagicHabit = async () => {
     }
     stopLoadingSound()
     playSound('epic_magic')
-    toast.add({ title: 'Magic Habit Created! ✨', description: `${aiData.icon} ${aiData.title} is ready for you.`, color: 'purple' })
+    toast.add({ title: 'Magic Habit Created! ✨', description: `${aiData.icon} ${aiData.title} is ready for you.`, color: 'primary' })
     isMagicModalOpen.value = false
   } catch (error: any) {
     stopLoadingSound()
@@ -205,10 +211,10 @@ const submitHabit = async (data: any) => {
         setTimeout(() => { newlyCreatedHabitId.value = null }, 1200)
       }
       playSound('success')
-      toast.add({ title: 'Habit created! 🎉', description: `${data.icon} ${data.title} added successfully.`, color: 'green' })
+      toast.add({ title: 'Habit created! 🎉', description: `${data.icon} ${data.title} added successfully.`, color: 'success' })
     } catch (error: any) {
       console.error('Failed to submit habit:', error)
-      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'red' })
+      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'error' })
     } finally {
       isCreatingHabit.value = false
     }
@@ -217,10 +223,10 @@ const submitHabit = async (data: any) => {
       await $fetch(`/api/habits/${data.id}`, { method: 'PATCH', body: data })
       await fetchHabits()
       playSound('pop')
-      toast.add({ title: 'Habit updated ✨', description: 'Changes saved successfully.', color: 'green' })
+      toast.add({ title: 'Habit updated ✨', description: 'Changes saved successfully.', color: 'success' })
     } catch (error: any) {
       console.error('Failed to submit habit:', error)
-      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'red' })
+      toast.add({ title: 'Something went wrong', description: error?.data?.message || 'Failed to save habit. Please try again.', color: 'error' })
     }
   }
 }
@@ -229,7 +235,7 @@ const deleteHabit = async (id: string) => {
   playSound('uncheck')
   await $fetch(`/api/habits/${id}`, { method: 'DELETE' })
   habits.value = habits.value.filter(h => h.id !== id)
-  toast.add({ title: 'Habit deleted', description: 'The habit and its tasks were removed.', color: 'red' })
+  toast.add({ title: 'Habit deleted', description: 'The habit and its tasks were removed.', color: 'error' })
   fetchHabits()
 }
 
@@ -260,7 +266,7 @@ const toggleTask = async (task: any) => {
     task.completedAt = newCompleted ? new Date().toISOString() : null
     
     if (newCompleted) {
-      toast.add({ title: 'Task Completed! 🎯', description: `Awesome job completing "${task.text}"!`, color: 'green' })
+      toast.add({ title: 'Task Completed! 🎯', description: `Awesome job completing "${task.text}"!`, color: 'success' })
     }
     
     fetchHabits()
@@ -268,7 +274,7 @@ const toggleTask = async (task: any) => {
   } catch (error) {
     stopLoadingSound()
     console.error('Failed to toggle task:', error)
-    toast.add({ title: 'Error', description: 'Failed to update task. Please try again.', color: 'red' })
+    toast.add({ title: 'Error', description: 'Failed to update task. Please try again.', color: 'error' })
   } finally {
     stopLoadingSound()
     togglingTaskIds.value = togglingTaskIds.value.filter(id => id !== task.id)
@@ -309,7 +315,7 @@ const reorderTasks = async (habitId: string, fromTaskId: string, toTaskId: strin
       body: { tasks: payload }
     }).catch(err => {
       console.error('Failed to reorder tasks:', err)
-      toast.add({ title: 'Reorder Failed', description: 'Failed to sync reorder to database.', color: 'red' })
+      toast.add({ title: 'Reorder Failed', description: 'Failed to sync reorder to database.', color: 'error' })
       fetchHabits() // revert
     })
   }
@@ -355,7 +361,7 @@ const onHabitDrop = (idx: number) => {
       body: { habits: payload }
     }).catch(err => {
       console.error('Failed to reorder habits:', err)
-      toast.add({ title: 'Reorder Failed', description: 'Failed to sync habit order to database.', color: 'red' })
+      toast.add({ title: 'Reorder Failed', description: 'Failed to sync habit order to database.', color: 'error' })
       fetchHabits() // revert
     })
   }
@@ -391,15 +397,15 @@ const fetchDailySuggestion = async () => {
   isTipModalOpen.value = true
   startLoadingSound()
   try {
-    const response = await $fetch<any>('/api/groq', {
+    const response = await $fetch<any>('/api/ai/daily-tip', {
       method: 'POST',
       body: { 
-        message: `I have completed ${tasksCompletedToday.value} habit tasks today. Give me ONE short, punchy, and engaging daily motivational tip based on this exact number. Be specific. Maximum 2 sentences. Do not use hashtags.`
+        completedCount: tasksCompletedToday.value
       }
     })
     stopLoadingSound()
     playSound('magic')
-    dailySuggestion.value = response.reply || 'No response from AI.'
+    dailySuggestion.value = response.tip || response.reply || 'Every action counts towards your goals.'
   } catch (e) {
     stopLoadingSound()
     console.error('Failed to get suggestion:', e)
@@ -410,18 +416,40 @@ const fetchDailySuggestion = async () => {
   }
 }
 
-const analyzeWeek = () => {
+const analyzeWeek = async () => {
+  if (isAnalyzing.value) return
   isAnalyzing.value = true
-  setTimeout(() => {
-    isAnalyzing.value = false
+  startLoadingSound()
+  try {
+    const response = await $fetch<any>('/api/ai/analyze-week', {
+      method: 'POST',
+      body: {
+        habitsSummary: habits.value.map(h => ({ title: h.title, taskCount: h.tasks?.length || 0 })),
+        weekStats: {
+          completedToday: tasksCompletedToday.value,
+          heatmapLast7Days: heatmapData.value.slice(-7)
+        }
+      }
+    })
+    stopLoadingSound()
+    playSound('magic')
+    toast.add({
+      title: response.title || 'Pattern Detected',
+      description: response.description,
+      color: 'primary',
+      icon: 'i-lucide-sparkles'
+    })
+  } catch (e) {
+    stopLoadingSound()
     toast.add({
       title: 'Pattern Detected',
       description: 'You complete 42% more habits after 7 PM. Weekend consistency drops slightly — consider reducing Saturday expectations.',
       color: 'primary',
-      icon: 'i-lucide-eye',
-      timeout: 8000
+      icon: 'i-lucide-eye'
     })
-  }, 2000)
+  } finally {
+    isAnalyzing.value = false
+  }
 }
 
 const fetchStats = async () => {
@@ -491,10 +519,9 @@ const openReflectionModal = async () => {
       dayPatterns
     }
 
-    const result = await $fetch('/api/groq', {
+    const result = await $fetch<any>('/api/ai/reflection', {
       method: 'POST',
       body: {
-        type: 'reflection',
         habitData
       }
     })
@@ -609,7 +636,7 @@ onMounted(() => {
                     <h3 class="text-xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
                       Behavioral Insights
                     </h3>
-                    <p class="text-xs text-gray-500 font-medium">Powered by Groq AI</p>
+                    <p class="text-xs text-gray-500 font-medium">Powered by Universal AI (9Router, Claude, GPT, Gemini, DeepSeek)</p>
                   </div>
                 </div>
                 
@@ -661,7 +688,7 @@ onMounted(() => {
                   </p>
                   
                   <UButton 
-                    color="blue" 
+                    color="primary" 
                     variant="solid" 
                     size="lg"
                     class="w-full justify-center rounded-xl py-3 group/btn relative overflow-hidden mt-auto bg-cyan-500! hover:bg-cyan-600! text-white! dark:text-black!"
@@ -727,7 +754,7 @@ onMounted(() => {
           <UIcon name="i-lucide-folder-plus" class="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
           <h3 class="text-xl font-bold mb-2">No habits yet</h3>
           <p class="text-gray-500 dark:text-gray-400 text-base mb-8 max-w-sm mx-auto">Create your first habit category to start tracking your daily progress.</p>
-          <UButton color="black" @click="openCreateModal" size="xl" class="rounded-full px-8 shadow-md">Create Habit</UButton>
+          <UButton color="neutral" @click="openCreateModal" size="xl" class="rounded-full px-8 shadow-md">Create Habit</UButton>
         </div>
 
         <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1059,7 +1086,7 @@ onMounted(() => {
                 
                 <div class="flex gap-3 w-full">
                   <UButton
-                    color="gray"
+                    color="neutral"
                     variant="soft"
                     size="lg"
                     class="rounded-xl flex-1 justify-center py-3"
@@ -1069,7 +1096,7 @@ onMounted(() => {
                     Get Another
                   </UButton>
                   <UButton
-                    color="blue"
+                    color="primary"
                     variant="solid"
                     size="lg"
                     class="rounded-xl flex-1 justify-center py-3 !bg-cyan-500 hover:!bg-cyan-600"
@@ -1108,7 +1135,7 @@ onMounted(() => {
                 </div>
                 <div>
                   <h3 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">AI Magic Create</h3>
-                  <p class="text-sm text-gray-500 mt-1">Tell Groq your goal, and we'll generate the perfect plan.</p>
+                  <p class="text-sm text-gray-500 mt-1">Tell AI your goal, and we'll generate the perfect plan.</p>
                 </div>
               </div>
               <button

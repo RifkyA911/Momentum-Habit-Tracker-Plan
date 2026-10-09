@@ -154,14 +154,9 @@ const handleGoogleSignup = async () => {
                   type="text"
                   size="xl"
                   placeholder="John Doe"
-                  color="white"
+                  color="neutral"
                   variant="outline"
-                  class="w-full"
-                  :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
-                    wrapper: 'w-full'
-                  }"
+                  class="w-full rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/25"
                 />
               </div>
 
@@ -172,14 +167,9 @@ const handleGoogleSignup = async () => {
                   type="email"
                   size="xl"
                   placeholder="hello@example.com"
-                  color="white"
+                  color="neutral"
                   variant="outline"
-                  class="w-full"
-                  :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
-                    wrapper: 'w-full'
-                  }"
+                  class="w-full rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/25"
                 />
               </div>
 
@@ -190,14 +180,9 @@ const handleGoogleSignup = async () => {
                   type="password"
                   size="xl"
                   placeholder="••••••••"
-                  color="white"
+                  color="neutral"
                   variant="outline"
-                  class="w-full"
-                  :ui="{
-                    rounded: 'rounded-2xl',
-                    base: 'bg-white/5 border-white/10 text-white placeholder:text-white/25',
-                    wrapper: 'w-full'
-                  }"
+                  class="w-full rounded-2xl bg-white/5 border-white/10 text-white placeholder:text-white/25"
                 />
                 <p class="text-xs text-white/30">Must be at least 8 characters</p>
               </div>
@@ -225,7 +210,7 @@ const handleGoogleSignup = async () => {
             <UButton
               block
               size="xl"
-              color="white"
+              color="neutral"
               variant="soft"
               icon="i-simple-icons-google"
               class="h-14 rounded-2xl border border-white/10 bg-white/5 text-white hover:bg-white/10"
