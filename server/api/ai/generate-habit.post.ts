@@ -1,4 +1,4 @@
-import { executeAICompletion, extractJSONFromAIResponse, type AIProvider } from '../../utils/ai'
+import { executeAICompletion, extractJSONFromAIResponse, getAISettingsFromEvent, type AIProvider } from '../../utils/ai'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -10,6 +10,10 @@ export default defineEventHandler(async (event) => {
       message: 'Prompt is required'
     })
   }
+
+  const userSettings = getAISettingsFromEvent(event)
+  const preferredProvider = (body?.provider || userSettings.preferredProvider) as AIProvider | undefined
+  const preferredModel = (body?.model || userSettings.preferredModel) as string | undefined
 
   const systemPrompt = `You are an AI that generates habit tracking templates. The user will give you a goal or topic. You must respond with ONLY a valid JSON object, no markdown formatting, no explanations. 
 Format:
@@ -29,8 +33,9 @@ Limit tasks to 3-5 specific, actionable items.`
       temperature: 0.7,
       maxTokens: 500,
       jsonMode: true,
-      preferredProvider: body?.provider as AIProvider | undefined,
-      preferredModel: body?.model as string | undefined
+      preferredProvider,
+      preferredModel,
+      customOverrides: userSettings.customOverrides
     })
 
     const parsed = extractJSONFromAIResponse<{

@@ -1,9 +1,13 @@
-import { executeAICompletion, extractJSONFromAIResponse, type AIProvider } from '../../utils/ai'
+import { executeAICompletion, extractJSONFromAIResponse, getAISettingsFromEvent, type AIProvider } from '../../utils/ai'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
+  const body = await readBody(event).catch(() => ({}))
   const habitsSummary = body?.habitsSummary || []
   const weekStats = body?.weekStats || {}
+
+  const userSettings = getAISettingsFromEvent(event)
+  const preferredProvider = (body?.provider || userSettings.preferredProvider) as AIProvider | undefined
+  const preferredModel = (body?.model || userSettings.preferredModel) as string | undefined
 
   const systemPrompt = `You are Momentum's behavioral scientist. You analyze weekly habit patterns and detect meaningful behavioral signals.
 Respond ONLY with a JSON object:
@@ -25,8 +29,9 @@ Identify the single most insightful behavioral pattern for this week.`
       temperature: 0.6,
       maxTokens: 250,
       jsonMode: true,
-      preferredProvider: body?.provider as AIProvider | undefined,
-      preferredModel: body?.model as string | undefined
+      preferredProvider,
+      preferredModel,
+      customOverrides: userSettings.customOverrides
     })
 
     const parsed = extractJSONFromAIResponse<{ title: string; description: string }>(result.text)

@@ -1,4 +1,4 @@
-import { executeAICompletion, type AIProvider } from '../../utils/ai'
+import { executeAICompletion, getAISettingsFromEvent, type AIProvider } from '../../utils/ai'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -10,6 +10,10 @@ export default defineEventHandler(async (event) => {
       message: 'habitData is required for behavioral reflection'
     })
   }
+
+  const userSettings = getAISettingsFromEvent(event)
+  const preferredProvider = (body?.provider || userSettings.preferredProvider) as AIProvider | undefined
+  const preferredModel = (body?.model || userSettings.preferredModel) as string | undefined
 
   const systemPrompt = `You are Momentum, a calm, premium, and emotionally intelligent behavioral reflection system. Your role is to observe user patterns and provide data-backed insights without being motivational or preachy.
 
@@ -44,8 +48,9 @@ Provide ONE short, reflective observation about my behavioral patterns based on 
       systemPrompt,
       temperature: 0.7,
       maxTokens: 250,
-      preferredProvider: body?.provider as AIProvider | undefined,
-      preferredModel: body?.model as string | undefined
+      preferredProvider,
+      preferredModel,
+      customOverrides: userSettings.customOverrides
     })
 
     return {
