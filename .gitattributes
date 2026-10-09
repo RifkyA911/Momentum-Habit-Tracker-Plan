@@ -1,0 +1,11 @@
+# GitHub Linguist language overrides
+*.vue linguist-language=Vue
+*.vue linguist-detectable=true
+*.ts linguist-language=TypeScript
+*.ts linguist-detectable=true
+
+# Ignore documentation and reports from language stats
+docs/* linguist-documentation
+*.md linguist-documentation
+playwright-report/* linguist-vendored
+*.html linguist-vendored

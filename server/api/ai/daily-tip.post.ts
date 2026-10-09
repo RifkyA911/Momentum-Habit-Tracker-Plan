@@ -30,10 +30,15 @@ export default defineEventHandler(async (event) => {
       }
     }
   } catch (error: any) {
-    console.error('[AI] Daily tip error:', error)
-    throw createError({
-      statusCode: 500,
-      message: error?.message || 'Failed to generate daily tip'
-    })
+    console.warn('[AI] Daily tip graceful fallback:', error?.message || error)
+    return {
+      tip: completedToday > 0
+        ? 'Great momentum today. Small daily wins compound into massive long-term transformations.'
+        : 'Focus on starting with just 2 minutes. The hardest step is simply showing up.',
+      _meta: {
+        provider: 'offline-fallback',
+        model: 'deterministic'
+      }
+    }
   }
 })

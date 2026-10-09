@@ -12,6 +12,7 @@ node_modules
 # Logs
 logs
 *.log
+/log
 
 # Misc
 .DS_Store
@@ -26,5 +27,7 @@ logs
 # db
 /server/db/migrations/
 
-# log
-/log
+# Test reports
+playwright-report
+test-results
+coverage
